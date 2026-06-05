@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search Food</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background: #f5f5f5; }
+
+    /* ── Hero search bar ── */
+    .search-hero {
+      background: linear-gradient(135deg, #e63946, #f4a261);
+      padding: 48px 16px 56px;
+      text-align: center;
+      color: #fff;
+    }
+    .search-hero h1 { font-weight: 700; font-size: 2rem; margin-bottom: 6px; }
+    .search-hero p  { opacity: .85; margin-bottom: 20px; }
+
+    .search-wrap {
+      display: flex;
+      width: 100%;
+      max-width: 520px;        /* ← was 580px, now narrower */
+      margin: 0 auto;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    }
+    @media (max-width: 576px) {
+    .search-wrap {
+      max-width: 100%;       /* full width on phones */
+     }
+    }
+    .search-wrap input {
+      flex: 1;
+      border: none;
+      padding: 14px 22px;
+      font-size: 1rem;
+      outline: none;
+    }
+    .search-wrap button {
+      background: #1d1d1d;
+      color: #fff;
+      border: none;
+      padding: 14px 26px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .search-wrap button:hover { background: #e63946; }
+
+    /* ── Category chips ── */
+    .chip {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 50px;
+      background: rgba(255,255,255,.2);
+      color: #fff;
+      font-size: .82rem;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,.4);
+      transition: background .2s;
+    }
+    .chip:hover, .chip.active { background: #fff; color: #e63946; }
+
+    /* ── Cards ── */
+    .food-card {
+      border: none;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+      transition: transform .2s, box-shadow .2s;
+      background: #fff;
+      cursor: pointer;
+    }
+    .food-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 28px rgba(0,0,0,.14);
+    }
+    .food-card .thumb {
+      width: 100%; height: 180px; object-fit: cover;
+    }
+    .food-card .thumb-placeholder {
+      width: 100%; height: 180px;
+      background: #fde8d8;
+      display: flex; align-items: center;
+      justify-content: center; font-size: 3.5rem;
+    }
+    .cat-badge {
+      display: inline-block;
+      background: #fff3e0; color: #c0392b;
+      font-size: .72rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .4px;
+    }
+    .price { font-size: 1.1rem; font-weight: 700; color: #2ecc71; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state .icon { font-size: 4rem; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ HERO + SEARCH BAR ═══ -->
+<div class="search-hero">
+  <h1>🍕 Find Your Food</h1>
+  <p>Search by name, description or category</p>
+
+  <form method="GET" action="{% url 'search' %}">
+    <div class="search-wrap">
+      <input
+        type="text" name="q"
+        value="{{ query }}"
+        placeholder="Try 'Pizza', 'Burger', 'Spicy'..."
+        autocomplete="off"
+      >
+      <button type="submit">🔍 Search</button>
+    </div>
+  </form>
+
+  <!-- Quick category chips -->
+  <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+    <a href="{% url 'search' %}?q=Pizza"       class="chip {% if query == 'Pizza' %}active{% endif %}">🍕 Pizza</a>
+    <a href="{% url 'search' %}?q=Burger"      class="chip {% if query == 'Burger' %}active{% endif %}">🍔 Burger</a>
+    <a href="{% url 'search' %}?q=Biryani"     class="chip {% if query == 'Biryani' %}active{% endif %}">🍛 Biryani</a>
+    <a href="{% url 'search' %}?q=Desserts"    class="chip {% if query == 'Desserts' %}active{% endif %}">🍰 Desserts</a>
+    <a href="{% url 'search' %}?q=Beverages"   class="chip {% if query == 'Beverages' %}active{% endif %}">🥤 Beverages</a>
+    <a href="{% url 'search' %}?q=French Fries" class="chip {% if query == 'French Fries' %}active{% endif %}">🍟 Fries</a>
+  </div>
+</div>
+
+
+<!-- ═══ RESULTS ═══ -->
+<div class="container py-5">
+
+  <!-- Result count -->
+  {% if query %}
+    <p class="text-muted mb-4">
+      {% if foods %}
+        <strong>{{ foods.count }}</strong> result{{ foods.count|pluralize }} for
+        <strong>"{{ query }}"</strong>
+      {% else %}
+        No results found for <strong>"{{ query }}"</strong>
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% if foods %}
+  <!-- Food grid -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-4">
+    {% for food in foods %}
+<div class="col">
+
+  <a href="{% url 'fooddetails' food.id %}" class="text-decoration-none text-dark">
+    <div class="food-card h-100 d-flex flex-column">
+
+      <!-- Image -->
+      {% if food.food_img %}
+        <img src="{{ food.food_img.url }}" alt="{{ food.name }}" class="thumb">
+      {% else %}
+        <div class="thumb-placeholder">🍽️</div>
+      {% endif %}
+
+      <!-- Body -->
+      <div class="card-body p-3 flex-grow-1">
+        <span class="cat-badge mb-2 d-inline-block">{{ food.category }}</span>
+        <h5 class="mb-1" style="font-size:1rem; font-weight:600;">{{ food.name }}</h5>
+        <p class="text-muted small mb-2">{{ food.desc|truncatewords:12 }}</p>
+        <div class="text-warning small mb-1">
+          {% for i in "12345" %}
+            {% if forloop.counter <= food.rating %}⭐{% endif %}
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-3 pb-3 d-flex justify-content-between align-items-center">
+        <span class="price">₹{{ food.price }}</span>
+        <a href="{% url 'addtocart' food.id %}"
+           class="btn btn-sm btn-danger rounded-pill px-3"
+           onclick="event.stopPropagation()">
+          + Cart
+        </a>
+      </div>
+
+    </div>
+  </a>
+
+</div>
+{% endfor %}
+  </div>
+
+  {% elif query %}
+  <!-- Empty state -->
+  <div class="empty-state">
+    <div class="icon">😕</div>
+    <h4 class="mt-3">Nothing found for "{{ query }}"</h4>
+    <p class="text-muted">Try searching for Pizza, Burger, Biryani or Desserts</p>
+    <a href="{% url 'search' %}" class="btn btn-outline-danger rounded-pill mt-2">
+      Clear Search
+    </a>
+  </div>
+
+  {% else %}
+  <!-- Default state — no query yet -->
+  <div class="empty-state">
+    <div class="icon">🔍</div>
+    <h4 class="mt-3">What are you craving?</h4>
+    <p class="text-muted">Type a food name or pick a category above</p>
+  </div>
+  {% endif %}
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+{% endblock %}

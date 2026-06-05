@@ -1,0 +1,458 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║            FOOD DETAILS PAGE - SYSTEM ARCHITECTURE & FLOW DIAGRAMS           ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════════════════════════
+1. USER NAVIGATION FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│                          FOODHUB APPLICATION                                 │
+│                                                                               │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │                                                                          │  │
+│  │                          HOME PAGE                                      │  │
+│  │  ┌────────────────────────────────────────────────────┐               │  │
+│  │  │ Top Rated Foods Section                            │               │  │
+│  │  │  [Food Card 1] [Food Card 2] [Food Card 3] ...   │               │  │
+│  │  │   Click on card →                                  │               │  │
+│  │  └────────────────────────────────────────────────────┘               │  │
+│  │  ┌────────────────────────────────────────────────────┐               │  │
+│  │  │ Popular Foods Section                              │               │  │
+│  │  │  [Food Card 1] [Food Card 2] [Food Card 3] ...   │               │  │
+│  │  │   Click on card →                                  │               │  │
+│  │  └────────────────────────────────────────────────────┘               │  │
+│  │                          │                                              │  │
+│  │                          ▼                                              │  │
+│  │  ┌────────────────────────────────────────────────────┐               │  │
+│  │  │        FOOD DETAILS PAGE (/foods/<id>/)           │               │  │
+│  │  │  ┌──────────────────────────────────────────────┐  │               │  │
+│  │  │  │ Food Image | Food Info                       │  │               │  │
+│  │  │  │ Rating     | Description                     │  │               │  │
+│  │  │  │ Price      | Quantity Selector               │  │               │  │
+│  │  │  │            | [Add to Cart] [Customize]       │  │               │  │
+│  │  │  └──────────────────────────────────────────────┘  │               │  │
+│  │  │                      │                              │               │  │
+│  │  │        ┌─────────────┴─────────────┬─────────────┐ │               │  │
+│  │  │        │                           │             │ │               │  │
+│  │  │        ▼                           ▼             ▼ │               │  │
+│  │  │   [Add to Cart]          [Customize]      [Back Button]             │  │
+│  │  │        │                           │             │ │               │  │
+│  │  │        ▼                           ▼             ▼ │               │  │
+│  │  │   CART PAGE              CUSTOMIZE PAGE   HOME/ALL FOODS             │  │
+│  │  │                                                     │               │  │
+│  │  └────────────────────────────────────────────────────┘               │  │
+│  │                                                                          │  │
+│  │  Similar flow from ALL FOODS page:                                      │  │
+│  │  All Foods → (Click Card) → Food Details → (Actions)                  │  │
+│  │                                                                          │  │
+│  └────────────────────────────────────────────────────────────────────────┘  │
+│                                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+2. URL & VIEW ROUTING DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+USER REQUEST → DJANGO ROUTING → VIEW PROCESSING → RESPONSE
+
+Step 1: User clicks food item
+   [User on Home/All Foods] → clicks [Food Card]
+              ↓
+   Browser navigates to: /foods/5/
+              ↓
+
+Step 2: URL Routing (urls.py)
+   Route: path('<int:id>', views.Food_Details, name='fooddetails')
+              ↓
+   Matches: /foods/5/  (extracts id=5)
+              ↓
+
+Step 3: View Processing (views.py)
+   def Food_Details(request, id=0):
+       fooditem = FoodItems.objects.get(id=id)  ← Database query
+       return render(request, 'foods/fooddetails.html', {'fooditem': fooditem})
+              ↓
+
+Step 4: Template Rendering (fooddetails.html)
+   Receives: fooditem object with:
+      - fooditem.name
+      - fooditem.price
+      - fooditem.rating
+      - fooditem.desc
+      - fooditem.food_img
+      - fooditem.category
+              ↓
+
+Step 5: Response to Browser
+   Rendered HTML page with:
+      - Food image
+      - Food details
+      - Interactive elements (buttons, quantity selector)
+      - Proper styling
+
+═══════════════════════════════════════════════════════════════════════════════
+3. DATA FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+DATABASE (FoodItems)
+         ↑
+         │ SELECT * WHERE id=5
+         │
+    ┌────┴───────────────────────────────┐
+    │                                      │
+    │   Django View: Food_Details         │
+    │   ├─ Receives: id parameter         │
+    │   ├─ Queries: FoodItems model       │
+    │   └─ Returns: fooditem object       │
+    │                                      │
+    └────┬───────────────────────────────┘
+         │
+         │ Context: {'fooditem': fooditem}
+         │
+    ┌────┴───────────────────────────────┐
+    │                                      │
+    │  Django Template: fooddetails.html  │
+    │  ├─ {{ fooditem.name }}             │
+    │  ├─ {{ fooditem.price }}            │
+    │  ├─ {{ fooditem.rating }}           │
+    │  ├─ {{ fooditem.desc }}             │
+    │  ├─ {{ fooditem.food_img.url }}     │
+    │  └─ {{ fooditem.category }}         │
+    │                                      │
+    └────┬───────────────────────────────┘
+         │
+         │ Rendered HTML
+         │
+    ┌────┴───────────────────────────────┐
+    │                                      │
+    │    Browser Rendering                │
+    │    ├─ Display food details         │
+    │    ├─ Show interactive elements    │
+    │    ├─ Apply CSS styling            │
+    │    └─ Execute JavaScript           │
+    │                                      │
+    └────┬───────────────────────────────┘
+         │
+         ↓
+    USER SEES FOOD DETAILS PAGE
+
+═══════════════════════════════════════════════════════════════════════════════
+4. FORM SUBMISSION FLOW (Add to Cart)
+═══════════════════════════════════════════════════════════════════════════════
+
+USER INTERACTION:
+   1. User selects quantity: [−] [3] [+]
+   2. User clicks "Add to Cart" button
+              ↓
+
+FORM SUBMISSION:
+   Method: POST
+   Action: /foods/cart/5/
+   Data:
+      - CSRF Token: {{ csrf_token }}
+      - Quantity: 3 (from hidden input)
+              ↓
+
+SERVER PROCESSING (AddToCart view):
+   def AddToCart(request, id):
+       food = FoodItems.objects.get(id=id)              ← Get food
+       quantity = request.POST.get('quantity', 1)       ← Get quantity (3)
+       cart_item, created = Cart.objects.get_or_create(
+           food=food,
+           defaults={'quantity': 3, 'total_price': 3*price}
+       )
+       if not created:                    ← If item already in cart
+           cart_item.quantity += 3        ← Add to existing quantity
+           cart_item.total_price = cart_item.quantity * food.price
+           cart_item.save()
+       return redirect('cart')            ← Redirect to cart page
+              ↓
+
+DATABASE UPDATE:
+   UPDATE cart SET quantity=3, total_price=3*price WHERE id=X
+              ↓
+
+USER RESPONSE:
+   Browser navigates to: /foods/cart/
+   Displays: Cart page with item added
+
+═══════════════════════════════════════════════════════════════════════════════
+5. CUSTOMIZE BUTTON FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+USER INTERACTION:
+   Click "Customize" button on Food Details page
+              ↓
+
+URL NAVIGATION:
+   {% url 'customize' fooditem.id %}
+   → /foods/customize/5/
+              ↓
+
+SERVER ROUTING:
+   path('customize/<int:id>/', views.Customize_Food, name='customize')
+              ↓
+
+CUSTOMIZE VIEW PROCESSING:
+   def Customize_Food(request, id):
+       food = FoodItems.objects.get(id=id)
+       
+       # Get all options
+       size_opt = SizeChart.objects.all()
+       base_opt = BaseType.objects.all()
+       sauce_opt = Sauce.objects.all()
+       toppings_opt = Toppings.objects.all()
+       
+       # Show options based on category
+       if food.category == "PIZZA":
+           show_size = True
+           show_base = True
+           show_sauce = True
+           show_toppings = True
+       elif food.category == "BURGER":
+           show_size = False
+           show_base = True
+           show_sauce = True
+           show_toppings = True
+       # ... more categories ...
+       
+       return render(request, 'foods/customize.html', context)
+              ↓
+
+TEMPLATE RENDERING:
+   Display customize.html with:
+      - Food image & name
+      - Quantity selector
+      - Available options (size, base, sauce, toppings)
+      - "Save to Cart" button
+              ↓
+
+USER CUSTOMIZES & SAVES:
+   Selects: Size=Large, Base=Wheat, Sauce=Red Pepper, Toppings=Onions+Peppers
+   Quantity: 2
+   Clicks: "Save to Cart"
+              ↓
+
+DATABASE UPDATE:
+   CREATE CustomizedCart(
+       food_id=5,
+       quantity=2,
+       base_price=299,
+       size_id=3,
+       base_id=1,
+       sauce_id=2,
+       ...
+   )
+              ↓
+
+FINAL RESULT:
+   Customized item added to cart
+   Redirect to cart page
+   User sees customized item with total price
+
+═══════════════════════════════════════════════════════════════════════════════
+6. COMPONENT INTERACTION DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     FOOD DETAILS PAGE COMPONENTS                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                               │
+│  ┌──────────────────┐        ┌──────────────────┐                           │
+│  │ Breadcrumb Nav   │────────│ Back Button      │                           │
+│  │ Home / All / Food│        │ history.back()   │                           │
+│  └──────────────────┘        └──────────────────┘                           │
+│           ↓                            ↑                                      │
+│           └────────────────────────────┘                                      │
+│                    Navigation Control                                         │
+│                                                                               │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    PRODUCT INFORMATION                               │   │
+│  │  ┌──────────────────┐      ┌──────────────────────────────────────┐ │   │
+│  │  │  Product Image   │      │  Category Badge (🍕 PIZZA)           │ │   │
+│  │  │  - 350x350px     │      │  Product Name (Bold, 2rem)           │ │   │
+│  │  │  - Responsive    │      │  ⭐ Rating 5.0  |  ₹299              │ │   │
+│  │  │  - Hover zoom    │      │                                       │ │   │
+│  │  │                  │      │  Description:                         │ │   │
+│  │  │                  │      │  Delicious pizza with fresh toppings │ │   │
+│  │  │                  │      │  and special sauce.                   │ │   │
+│  │  └──────────────────┘      │                                       │ │   │
+│  │                            │  Quantity Selector:                   │ │   │
+│  │                            │  [−] Input [+]                        │ │   │
+│  │                            │                                       │ │   │
+│  │                            │  Action Buttons:                      │ │   │
+│  │                            │  [Add to Cart] [Customize]            │ │   │
+│  │                            └──────────────────────────────────────┘ │   │
+│  │                                                                       │   │
+│  │  Data Source:                                                        │   │
+│  │  ├─ FoodItems.objects.get(id=id)  ← Database Query                 │   │
+│  │  ├─ Returns: name, price, rating, desc, food_img, category         │   │
+│  │  └─ Displayed in template: {{ fooditem.field }}                    │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                               │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    INTERACTIVE ELEMENTS                              │   │
+│  │                                                                       │   │
+│  │  JavaScript Functions:                                               │   │
+│  │  ├─ increaseQty() ─────→ Increment quantity counter                 │   │
+│  │  ├─ decreaseQty() ─────→ Decrement quantity counter (min: 1)       │   │
+│  │  ├─ updateQuantityField() → Sync visible to hidden field            │   │
+│  │  └─ Form validation ───→ Prevent invalid input                      │   │
+│  │                                                                       │   │
+│  │  Form Elements:                                                      │   │
+│  │  ├─ POST method ────────→ Submit to AddToCart view                  │   │
+│  │  ├─ CSRF token ────────→ Security                                   │   │
+│  │  ├─ Hidden quantity ────→ Form data                                 │   │
+│  │  └─ Action URL ────────→ /foods/cart/<id>/                         │   │
+│  │                                                                       │   │
+│  │  Button Actions:                                                     │   │
+│  │  ├─ "Add to Cart" ──────→ Submit form → AddToCart view → Cart page │   │
+│  │  └─ "Customize" ───────→ Navigate to → Customize page              │   │
+│  │                                                                       │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+7. FILE MODIFICATION DEPENDENCY DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+                          FoodItems Model
+                               ↑
+                               │ Uses
+                    ┌──────────┴──────────┐
+                    │                     │
+            views.py::Food_Details   views.py::AddToCart
+                    │                     │
+                    │ Renders             │ Redirects
+                    ↓                     ↓
+        fooddetails.html            cart.html
+                    │
+                    │ Links from
+                    │
+        ┌───────────┴───────────┐
+        │                       │
+    home.html          allfoods.html
+        │                       │
+        │ Product Cards         │ Food Cards
+        │ (Updated to link)     │ (Updated to link)
+        │                       │
+        └───────────┬───────────┘
+                    │
+                    ↓
+            Food Details Page
+            (When clicked)
+
+═══════════════════════════════════════════════════════════════════════════════
+8. STATE & DATA FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+INITIAL STATE (User on Home Page):
+   Database: FoodItems table with products
+   Cart: Empty or with previous items
+   User Input: None
+
+STEP 1: Click Food Card
+   User Action: Click on food item
+   State Change: Navigate to /foods/5/
+   Data Flow: Browser sends GET request with id=5
+
+STEP 2: Load Food Details
+   Server Action: Query FoodItems with id=5
+   State Change: Food details page displayed
+   Data Visible: Image, name, price, rating, description
+   User Sees: Complete product information
+
+STEP 3: Adjust Quantity
+   User Action: Click [+] button twice (1 → 3)
+   State Change: JavaScript updates quantity input
+   Data: { quantity: 3 }
+   User Sees: Input field shows "3"
+
+STEP 4: Click "Add to Cart"
+   User Action: Click "Add to Cart" button
+   State Change: Form submission triggered
+   Data Sent: { quantity: 3, csrf_token: xxx }
+   Server: AddToCart view processes request
+
+STEP 5: Database Update
+   Server Query: SELECT * FROM Cart WHERE food_id=5
+   Server Action: If exists → UPDATE quantity; Else → INSERT
+   Database State: Cart table updated
+   Result: Item added with quantity=3
+
+STEP 6: Redirect & Display
+   Server Response: Redirect to /foods/cart/
+   Browser Action: Navigate to cart page
+   State Change: Cart page loaded
+   User Sees: New item in cart with quantity=3
+
+═══════════════════════════════════════════════════════════════════════════════
+9. ERROR HANDLING FLOW DIAGRAM
+═══════════════════════════════════════════════════════════════════════════════
+
+User Action: Enter /foods/999/ (non-existent food)
+              ↓
+Django URL Routing: Matches pattern, extracts id=999
+              ↓
+Food_Details View: FoodItems.objects.get(id=999)
+              ↓
+Database Query: SELECT * WHERE id=999
+              ↓
+Result: Object does not exist → ObjectDoesNotExist exception
+              ↓
+Django Exception Handler: Converts to Http404
+              ↓
+Response: 404 Error Page
+              ↓
+User Sees: "Page Not Found" message
+
+Image Missing:
+   {% if fooditem.food_img %}
+       <img src="{{ fooditem.food_img.url }}"> ← Image exists
+   {% else %}
+       <img src="{% static 'images/defaultimg.png' %}"> ← Fallback
+   {% endif %}
+
+Description Missing:
+   {% if fooditem.desc %}
+       {{ fooditem.desc }} ← Show description
+   {% else %}
+       No description available ← Show message
+   {% endif %}
+
+═══════════════════════════════════════════════════════════════════════════════
+10. BROWSER RENDERING FLOW
+═══════════════════════════════════════════════════════════════════════════════
+
+Server sends HTML response
+   ↓
+Browser parses HTML structure
+   ↓
+Loads external resources (CSS, images, fonts)
+   ↓
+Applies CSS styling to elements
+   ↓
+Executes JavaScript code
+   - increaseQty() function attached to [+] button
+   - decreaseQty() function attached to [−] button
+   - updateQuantityField() attached to form submit
+   - event listeners for form validation
+   ↓
+DOM fully loaded and interactive
+   ↓
+User can interact with page:
+   - Click buttons
+   - Change quantity
+   - Submit forms
+   - Navigate pages
+
+═══════════════════════════════════════════════════════════════════════════════
+
+All diagrams show the complete system flow from user interaction through
+database operations to final response. This architecture ensures smooth,
+reliable operation of the food details page functionality.
+
+═══════════════════════════════════════════════════════════════════════════════

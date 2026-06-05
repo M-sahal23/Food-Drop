@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg-secondary);
+  }
+
+  .header-section {
+    background: var(--accent);
+    color: white;
+    padding: 30px 0;
+    margin-bottom: 40px;
+  }
+
+  .header-section h1 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .container {
+    max-width: 1000px;
+  }
+
+  .card {
+    border: none;
+    box-shadow: 0 4px 20px var(--shadow);
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: var(--bg-card);
+  }
+
+  .card-body {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    padding: 40px;
+  }
+
+  /* FOOD SECTION */
+  .food-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+  }
+
+  .food-section h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-primary);
+    text-align: center;
+  }
+
+  .food-section img {
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 12px var(--shadow);
+    transition: transform 0.3s ease;
+  }
+
+  .food-section img:hover {
+    transform: scale(1.05);
+  }
+
+  .food-info-box {
+    width: 100%;
+    background: var(--bg-card);
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid var(--accent);
+    text-align: center;
+  }
+
+  .food-info-box p {
+    margin: 8px 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  .price-badge {
+    background: var(--accent);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+    display: inline-block;
+    margin-top: 5px;
+  }
+
+  .rating-badge {
+    color: var(--accent);
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+
+  /* CUSTOMIZATION SECTION */
+  .customization-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .customization-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* CATEGORY INFO */
+  .category-info {
+    background: var(--bg-secondary);
+    border-left: 5px solid var(--accent);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+  }
+
+  .category-info p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .category-info strong {
+    color: var(--accent);
+  }
+
+  /* OPTION GROUP */
+  .option-group {
+    border: 2px solid var(--border-color);
+    padding: 18px;
+    border-radius: 10px;
+    background: var(--bg-card);
+    transition: all 0.3s ease;
+  }
+
+  .option-group:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(230, 57, 70, 0.1);
+  }
+
+  .option-group h5 {
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .option-group label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 8px;
+    border-radius: 6px;
+    color: var(--text-primary);
+  }
+
+  .option-group label:hover {
+    background: var(--bg-secondary);
+  }
+
+  .option-group label:last-child {
+    margin-bottom: 0;
+  }
+
+  .option-group input[type="radio"],
+  .option-group input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .option-item-text {
+    flex: 1;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .price-badge-small {
+    background: var(--accent);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-left: auto;
+  }
+
+  .option-group img {
+    width: 25px;
+    height: 25px;
+    border-radius: 4px;
+    margin-left: 10px;
+  }
+
+  /* QUANTITY SECTION */
+  .quantity-section {
+    border: 2px solid var(--border-color);
+    padding: 18px;
+    border-radius: 10px;
+    background: var(--bg-card);
+  }
+
+  .quantity-section label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+  }
+
+  .quantity-input {
+    width: 100px;
+    padding: 10px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    transition: border-color 0.3s ease;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
+  }
+
+  .quantity-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  /* PRICE SUMMARY */
+  .price-summary {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent);
+    padding: 18px;
+    border-radius: 10px;
+    margin-top: 15px;
+  }
+
+  .price-summary h6 {
+    color: var(--accent);
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+  }
+
+  .price-summary p {
+    margin: 8px 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+
+  .price-summary small {
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 10px;
+  }
+
+  /* SUBMIT BUTTON */
+  .submit-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .submit-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(230, 57, 70, 0.3);
+  }
+
+  .submit-btn:active {
+    transform: translateY(-1px);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .card-body {
+      grid-template-columns: 1fr;
+      gap: 30px;
+      padding: 25px;
+    }
+
+    .food-section img {
+      width: 140px;
+      height: 140px;
+    }
+
+    .header-section h1 {
+      font-size: 1.5rem;
+    }
+  }
+</style>
+
+<div class="header-section">
+  <div class="container">
+    <h1>✏️ Customize Your Order</h1>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <!-- FOOD SECTION -->
+      <div class="food-section">
+        <h3>{{ food.name }}</h3>
+        {% if food.food_img %}
+          <img src="{{ food.food_img.url }}" alt="{{ food.name }}">
+        {% else %}
+          <img src="{% static 'images/defaultimg.png' %}" alt="No image">
+        {% endif %}
+        
+        <div class="food-info-box">
+          <p><strong>Base Price:</strong></p>
+          <div class="price-badge">₹{{ food.price }}</div>
+          
+          <p style="margin-top: 12px; margin-bottom: 5px;"><strong>Rating:</strong></p>
+          <span class="rating-badge">⭐ {{ food.rating }}</span>
+        </div>
+      </div>
+
+      <!-- CUSTOMIZATION SECTION -->
+      <div class="customization-section">
+        <!-- CATEGORY INFO -->
+        <div class="category-info">
+          <p>
+            <strong>📍 Category:</strong> {{ food.get_category_display }}
+          </p>
+          {% if food_category == "PIZZA" %}
+            <p style="margin-top: 8px;">✓ Customize: Size, Base, Sauce, Toppings</p>
+          {% elif food_category == "BURGER" %}
+            <p style="margin-top: 8px;">✓ Customize: Base, Sauce, Toppings</p>
+          {% elif food_category == "BIRIYANI" %}
+            <p style="margin-top: 8px;">✓ Customize: Toppings</p>
+          {% elif food_category == "FRENCH FRIES" %}
+            <p style="margin-top: 8px;">✓ Customize: Size, Sauce, Toppings</p>
+          {% elif food_category == "DESSERTS" %}
+            <p style="margin-top: 8px;">✓ Customize: Toppings</p>
+          {% elif food_category == "BEVERAGES" %}
+            <p style="margin-top: 8px;">✓ Customize: Size</p>
+          {% endif %}
+        </div>
+
+        <form method="POST" action="{% url 'save_customization' food.id %}">
+          {% csrf_token %}
+
+          <!-- SIZE OPTIONS -->
+          {% if show_size %}
+          <div class="option-group">
+            <h5>📏 Select Size</h5>
+            <label>
+              <input type="radio" name="size" value="">
+              <span class="option-item-text">❌ No Size</span>
+            </label>
+            {% for size in size_opt %}
+              <label>
+                <input type="radio" name="size" value="{{ size.id }}">
+                <span class="option-item-text">{{ size.size_type }} ({{ size.size_in_cm }})</span>
+                <span class="price-badge-small">+₹{{ size.price }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- BASE OPTIONS -->
+          {% if show_base %}
+          <div class="option-group">
+            <h5>🥄 Select Base</h5>
+            <label>
+              <input type="radio" name="base" value="">
+              <span class="option-item-text">❌ No Base</span>
+            </label>
+            {% for base in base_opt %}
+              <label>
+                <input type="radio" name="base" value="{{ base.id }}">
+                <span class="option-item-text">{{ base.base_name }}</span>
+                {% if base.base_img %}
+                  <img src="{{ base.base_img.url }}" alt="{{ base.base_name }}">
+                {% endif %}
+              </label>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- SAUCE OPTIONS -->
+          {% if show_sauce %}
+          <div class="option-group">
+            <h5>🍅 Select Sauce</h5>
+            <label>
+              <input type="radio" name="sauce" value="">
+              <span class="option-item-text">❌ No Sauce</span>
+            </label>
+            {% for sauce in sauce_opt %}
+              <label>
+                <input type="radio" name="sauce" value="{{ sauce.id }}">
+                <span class="option-item-text">{{ sauce.sname }}</span>
+                <span class="price-badge-small">+₹{{ sauce.price }}</span>
+              </label>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- TOPPINGS OPTIONS -->
+          {% if show_toppings %}
+          <div class="option-group">
+            <h5>🧅 Select Toppings <small style="font-weight: normal; color: #999;">(Multiple)</small></h5>
+            {% for topping in toppings_opt %}
+              <label>
+                <input type="checkbox" name="toppings" value="{{ topping.id }}">
+                <span class="option-item-text">{{ topping.topping_name }}</span>
+                <span class="price-badge-small">+₹{{ topping.price }}</span>
+              </label>
+            {% empty %}
+              <p style="color: #999; padding: 10px;">No toppings available</p>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- PRICE SUMMARY -->
+          <div class="price-summary">
+            <h6>💰 Price Breakdown:</h6>
+            <p><strong>Base Price:</strong> ₹{{ food.price }}</p>
+            <small>Additional prices will be added based on your selections</small>
+          </div>
+
+          <!-- SUBMIT BUTTON -->
+          <button type="submit" class="submit-btn">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

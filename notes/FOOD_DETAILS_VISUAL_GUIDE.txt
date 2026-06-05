@@ -1,0 +1,327 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           FOOD DETAILS PAGE - USER FLOW & VISUAL GUIDE                      ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ PAGE LAYOUT STRUCTURE                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+
+BREADCRUMB SECTION (Top)
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Home / All Foods / Food Name                     [Back ←]                │
+└──────────────────────────────────────────────────────────────────────────┘
+
+MAIN CONTENT AREA
+┌──────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  ┌────────────────────────┐  ┌──────────────────────────────────────┐   │
+│  │                        │  │ 🍕 PIZZA                             │   │
+│  │                        │  │                                       │   │
+│  │      FOOD IMAGE        │  │ Pizza Deluxe                          │   │
+│  │                        │  │                                       │   │
+│  │                        │  │ ⭐ 5.0         ₹299                  │   │
+│  │                        │  │                                       │   │
+│  │                        │  │ Description:                          │   │
+│  │                        │  │ Delicious pizza with fresh toppings   │   │
+│  │                        │  │ and special sauce.                    │   │
+│  │                        │  │                                       │   │
+│  │                        │  │ Quantity:  [−] [1] [+]               │   │
+│  │                        │  │                                       │   │
+│  │                        │  │ ┌──────────┐  ┌──────────┐           │   │
+│  │                        │  │ │ Add Cart │  │ Customize│           │   │
+│  │                        │  │ └──────────┘  └──────────┘           │   │
+│  │                        │  │                                       │   │
+│  └────────────────────────┘  └──────────────────────────────────────┘   │
+│                                                                            │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ NAVIGATION FLOW                                                             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+HOME PAGE                    ALL FOODS PAGE
+    ↓                            ↓
+   [Click on food card]    [Click on food card]
+    ↓                            ↓
+ FOOD DETAILS PAGE
+    ├─→ Back Button → Previous Page
+    ├─→ Breadcrumb Links → Home, All Foods
+    ├─→ [Add to Cart] → Cart Page
+    └─→ [Customize] → Customization Page
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ RESPONSIVE DESIGN                                                           │
+└────────────────────────────────────────────────────────────────────────────┘
+
+DESKTOP VIEW (Width > 768px)
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Home / All Foods / Product Name                          [Back ←]   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│  ┌──────────────────────────────────────┬──────────────────────────────┐   │
+│  │                                      │  🍔 Burger Name              │   │
+│  │                                      │                              │   │
+│  │          PRODUCT IMAGE               │  ⭐ 4.5    ₹199             │   │
+│  │          (Left Side)                 │                              │   │
+│  │          350x350px                   │  Description & Details       │   │
+│  │                                      │  (Right Side)                │   │
+│  │                                      │  ┌─────────────────────┐    │   │
+│  │                                      │  │ Qty: [−] [2] [+]   │    │   │
+│  │                                      │  └─────────────────────┘    │   │
+│  │                                      │  ┌─────┐  ┌──────────┐     │   │
+│  │                                      │  │ Add │  │Customize │     │   │
+│  │                                      │  └─────┘  └──────────┘     │   │
+│  └──────────────────────────────────────┴──────────────────────────────┘   │
+│                                                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+
+TABLET VIEW (Width 480-768px)
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Home / All Foods / Product          [Back ←]                       │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                                                                      │   │
+│  │                    PRODUCT IMAGE                                    │   │
+│  │                      (280x280px)                                    │   │
+│  │                                                                      │   │
+│  ├─────────────────────────────────────────────────────────────────────┤   │
+│  │ 🍔 Burger Name                                                      │   │
+│  │ ⭐ 4.5           ₹199                                               │   │
+│  │                                                                      │   │
+│  │ Description of the burger...                                        │   │
+│  │                                                                      │   │
+│  │ Qty: [−] [2] [+]                                                   │   │
+│  │                                                                      │   │
+│  │ ┌─────────────────────┐  ┌──────────────────────┐                  │   │
+│  │ │  Add to Cart        │  │   Customize          │                  │   │
+│  │ └─────────────────────┘  └──────────────────────┘                  │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+
+MOBILE VIEW (Width < 480px)
+┌────────────────────────────┐
+│ Home / All Foods... [Back] │
+├────────────────────────────┤
+│                            │
+│    PRODUCT IMAGE           │
+│      (100% width)          │
+│      Auto height           │
+│                            │
+├────────────────────────────┤
+│ 🍔 Burger Name             │
+│ ⭐ 4.5        ₹199         │
+│                            │
+│ Description of burger      │
+│ with fresh ingredients     │
+│                            │
+│ Qty: [−] [2] [+]          │
+│                            │
+│ ┌─────────────────────────┐│
+│ │   Add to Cart           ││
+│ └─────────────────────────┘│
+│ ┌─────────────────────────┐│
+│ │   Customize             ││
+│ └─────────────────────────┘│
+│                            │
+└────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ BUTTON INTERACTIONS                                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+[ADD TO CART BUTTON]
+─────────────────────────────────────────────────────────────────────────────
+Style:         Red background (#ef4f5f) with white text
+Icon:          🛒 Cart icon (left side)
+Action:        Submits form with selected quantity
+Result:        Item added to cart → Redirects to cart page
+Hover:         Color darkens, shadow appears, moves up slightly
+Disabled:      N/A (always enabled)
+
+[CUSTOMIZE BUTTON]
+─────────────────────────────────────────────────────────────────────────────
+Style:         White background with red border (#ef4f5f)
+Icon:          🎨 Palette icon (left side)
+Action:        Opens customization page for this food
+Result:        Redirects to customize page (based on category)
+Hover:         Light red background, shadow appears
+Disabled:      N/A (always enabled)
+
+[QUANTITY BUTTONS]
+─────────────────────────────────────────────────────────────────────────────
+Minus Button:  Decreases quantity (minimum 1)
+Input Field:   Direct entry of quantity (accepts numbers only)
+Plus Button:   Increases quantity (no maximum)
+Linked Field:  Updates hidden form field for submission
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ COLOR SCHEME & STYLING                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+PRIMARY COLORS:
+  Primary Red:    #ef4f5f  (Buttons, accents, rating badge)
+  Dark Red:       #e63d4a  (Hover state)
+  
+TEXT COLORS:
+  Dark Text:      #1c1c1c  (Titles, main content)
+  Medium Gray:    #7e8c8d  (Secondary text, labels)
+  Light Gray:     #bdc3c7  (Disabled text, hints)
+  White:          #ffffff  (On dark backgrounds)
+
+BACKGROUND COLORS:
+  Page BG:        #f5f5f5  (Light gray page background)
+  Card BG:        #ffffff  (White cards)
+  Section BG:     #f9f9f9  (Light gray sections)
+  Input BG:       #f9f9f9  (Form fields)
+
+TYPOGRAPHY:
+  Page Title:     2rem, font-weight: 700 (#1c1c1c)
+  Section Title:  1.5rem, font-weight: 700 (#1c1c1c)
+  Subtitle:       1.1rem, font-weight: 600 (#1c1c1c)
+  Body Text:      0.95rem, font-weight: 400 (#7e8c8d)
+  Label:          0.85rem, font-weight: 600 (#1c1c1c)
+  Button Text:    1rem, font-weight: 700 (#ffffff or #ef4f5f)
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ CATEGORY ICONS                                                              │
+└────────────────────────────────────────────────────────────────────────────┘
+
+PIZZA       → 🍕
+BURGER      → 🍔
+FRENCH FRIES→ 🍟
+DESSERTS    → 🍰
+BEVERAGES   → 🥤
+BIRYANI     → 🍚
+DEFAULT     → 🍽️
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ANIMATION & EFFECTS                                                         │
+└────────────────────────────────────────────────────────────────────────────┘
+
+HOVER EFFECTS (All 0.2-0.3s ease):
+  • Product Image: Scale 1.05 on hover
+  • Buttons: Change color, lift with shadow
+  • Links: Color change to darker shade
+  • Cards: Subtle shadow enhancement
+
+TRANSITIONS:
+  • Duration: 200-300ms
+  • Timing: ease or cubic-bezier
+  • Properties: transform, box-shadow, background-color
+
+BREADCRUMB ANIMATION:
+  • Links change color on hover (#ef4f5f)
+  • Underline appears on interaction
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ INFORMATION HIERARCHY                                                       │
+└────────────────────────────────────────────────────────────────────────────┘
+
+LEVEL 1 (MOST IMPORTANT):
+  • Food Name (2rem)
+  • Price (1.8rem, red color)
+  • Food Image (prominent, large)
+  • Action Buttons (red, contrasting)
+
+LEVEL 2 (IMPORTANT):
+  • Rating (1.1rem, red badge)
+  • Category (0.85rem tag)
+  • Call-to-action buttons
+
+LEVEL 3 (SUPPORTING):
+  • Description (0.95rem, gray)
+  • Quantity controls (0.85rem)
+  • Navigation links (breadcrumb)
+
+LEVEL 4 (SUBTLE):
+  • Category label in details
+  • Back button
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ ACCESSIBILITY FEATURES                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+✓ Semantic HTML structure
+✓ Alt text for all images
+✓ Proper heading hierarchy (H1, H2, H3)
+✓ Color contrast ratio > 4.5:1 (WCAG AA)
+✓ Keyboard navigation support
+✓ Form labels and input associations
+✓ Focus states on interactive elements
+✓ Clear, descriptive link text
+✓ Skip to content functionality (breadcrumb)
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LOADING & ERROR STATES                                                      │
+└────────────────────────────────────────────────────────────────────────────┘
+
+IMAGE NOT FOUND:
+  Display: Default image (images/defaultimg.png)
+  Message: "No image available"
+
+DESCRIPTION MISSING:
+  Display: "No description available" (italic, light gray)
+  Styling: #bdc3c7 color, smaller font
+
+FOOD ITEM NOT FOUND:
+  Display: Django 404 error page
+  Message: "Food item not found"
+
+CART ADD SUCCESS:
+  Display: Green notification toast (top-right)
+  Message: "✓ Added to cart successfully!"
+  Duration: Auto-hide after 3 seconds
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│ EXAMPLE SCENARIO                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+SCENARIO: User wants to order a pizza with custom quantity
+
+STEPS:
+1. User on Home page sees Pizza card
+2. Clicks on pizza card image/name area
+   ↓
+3. Redirects to Food Details page showing:
+   - Large pizza image
+   - "🍕 PIZZA" category tag
+   - Name: "Deluxe Veggie Pizza"
+   - Rating: "⭐ 5.0"
+   - Price: "₹349"
+   - Description: "Fresh vegetables with special sauce..."
+   - Quantity selector: Currently 1
+   
+4. User wants 3 pizzas, clicks [+] button twice
+   - Counter changes: 1 → 2 → 3
+   
+5. User clicks red "Add to Cart" button
+   - Form submits with quantity=3
+   - View processes and adds to cart
+   - Page redirects to cart showing item added
+   
+ALTERNATIVE SCENARIO: User wants to customize pizza
+
+3. After step 3, user clicks "Customize" button
+4. Redirects to customization page showing:
+   - Pizza image
+   - Size options (Regular, Medium, Large)
+   - Base options (Maida, Wheat)
+   - Sauce options (Garlic, Red Pepper, etc.)
+   - Toppings selection (Onions, Peppers, etc.)
+   - Quantity selector
+   
+5. User selects: Size=Large, Base=Wheat, Sauce=Red Pepper, Toppings=Onions+Peppers
+6. Sets quantity to 2
+7. Clicks "Save to Cart"
+8. Customized item added to CustomizedCart
+9. Redirects to cart showing customized item
+
+═══════════════════════════════════════════════════════════════════════════════
+Visual Guide Complete - Ready for Implementation Testing
+═══════════════════════════════════════════════════════════════════════════════

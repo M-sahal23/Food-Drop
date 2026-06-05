@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+<style>
+    /* Zomato-like compact cart styles */
+    :root{--maxw:980px;--accent:#ff3b30;--muted:#687076;--soft:#fff6f5}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:Segoe UI,Helvetica,Arial,sans-serif;background:#ffffff;color:#0b1220}
+    .cart-container{max-width:var(--maxw);margin:18px auto;padding:14px}
+    .cart-header{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f4f4f5}
+    .cart-header h1{font-size:1.05rem;font-weight:800;letter-spacing:0.2px}
+    .cart-content{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-top:14px}
+
+    /* Items list */
+    .cart-items{background:#fff;border-radius:10px;border:1px solid #f2f2f3;overflow:hidden}
+    .cart-item{display:flex;gap:14px;padding:12px;border-bottom:1px solid #fbfbfb;align-items:flex-start}
+    .cart-item:last-child{border-bottom:none}
+    .item-image{width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#fff}
+    .item-image img{width:100%;height:100%;object-fit:cover;display:block}
+    .item-details{flex:1;min-width:0}
+    .item-name{font-weight:800;margin:0 0 6px;font-size:0.98rem;color:#0b1220}
+    .item-category{color:var(--muted);font-size:0.82rem;margin:0}
+    .item-price{font-weight:800;color:var(--accent);margin-top:8px}
+    .customization-badge{display:inline-block;background:var(--soft);color:var(--accent);padding:4px 8px;border-radius:12px;font-size:0.75rem;margin-top:6px}
+
+    /* Controls */
+    .item-footer{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+    .quantity-controls{display:flex;align-items:center;border:1px solid #eee;border-radius:8px;overflow:hidden;background:#fff}
+    .qty-btn{background:#fff;border:none;padding:8px 10px;cursor:pointer;color:#0b1220;font-weight:800}
+    .qty-display{padding:0 10px;font-weight:800}
+    .item-delete{color:#ff3b30;text-decoration:none;padding-left:8px;font-weight:700}
+
+    /* Order summary */
+    .order-summary{border-radius:10px;padding:16px;background:#fff;border:1px solid #f2f2f3;position:sticky;top:18px}
+    .summary-title{font-weight:800;margin-bottom:8px;font-size:0.98rem}
+    .summary-row{display:flex;justify-content:space-between;color:var(--muted);font-size:0.95rem;margin-bottom:10px}
+    .summary-row.total{font-weight:900;color:#0b1220;padding-top:8px;border-top:1px dashed #f5f5f5}
+    .checkout-btn{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:800;box-shadow:0 6px 20px rgba(255,59,48,0.12)}
+    .checkout-btn[disabled]{opacity:0.6;cursor:not-allowed}
+    .continue-shopping{display:block;text-align:center;margin-top:10px;color:var(--muted);text-decoration:none}
+
+    .empty-cart{padding:36px;text-align:center;border:1px solid #f3f4f5;border-radius:10px}
+
+    /* Modal tweaks */
+    .modal-content{border-radius:10px}
+    .modal-header .btn-close{margin:0}
+    .modal-body label{font-weight:700;color:#0b1220}
+    .modal-body .form-control{border-radius:8px}
+
+    /* Responsive */
+    @media(max-width:880px){.cart-content{grid-template-columns:1fr 300px}}
+    @media(max-width:720px){.cart-content{grid-template-columns:1fr}.order-summary{position:static;margin-top:12px}}
+</style>
+
+<div class="cart-header">
+    <h1>Shopping Cart</h1>
+</div>
+
+<div class="cart-container">
+    {% if cart_items or customized_items %}
+        <div class="cart-content">
+            <!-- CART ITEMS -->
+            <div class="cart-items">
+                {% if cart_items %}
+                    {% for item in cart_items %}
+                        <div class="cart-item">
+                            <div class="item-image">
+                                {% if item.food.food_img %}
+                                    <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}">
+                                {% else %}
+                                    <img src="{% static 'images/defaultimg.png' %}" alt="No image">
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <div class="item-header">
+                                    <p class="item-name">{{ item.food.name }}</p>
+                                    <p class="item-category">{{ item.food.category }}</p>
+                                </div>
+                                <div class="item-price">₹{{ item.total_price }}</div>
+                            </div>
+                            <div class="item-footer">
+                                <form method="POST" action="{% url 'update_quantity' item.id %}" style="display: flex; gap: 10px;">
+                                    {% csrf_token %}
+                                    <div class="quantity-controls">
+                                        <button type="submit" name="action" value="decrease" class="qty-btn">−</button>
+                                        <span class="qty-display">{{ item.quantity }}</span>
+                                        <button type="submit" name="action" value="increase" class="qty-btn">+</button>
+                                    </div>
+                                </form>
+                                <a href="{% url 'delete_from_cart' item.id %}" onclick="return confirm('Remove item?');" class="item-delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if customized_items %}
+                    {% for item in customized_items %}
+                        <div class="cart-item">
+                            <div class="item-image">
+                                {% if item.food.food_img %}
+                                    <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}">
+                                {% else %}
+                                    <img src="{% static 'images/defaultimg.png' %}" alt="No image">
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <div class="item-header">
+                                    <p class="item-name">{{ item.food.name }}</p>
+                                    <p class="item-category">{{ item.food.category }}</p>
+                                </div>
+                                <span class="customization-badge">CUSTOMIZED</span>
+                                
+                                <div class="customization-details">
+                                    {% if item.size %}
+                                        <p><strong>Size:</strong> {{ item.size.size_type }}</p>
+                                    {% endif %}
+                                    {% if item.base %}
+                                        <p><strong>Base:</strong> {{ item.base.base_name }}</p>
+                                    {% endif %}
+                                    {% if item.sauce %}
+                                        <p><strong>Sauce:</strong> {{ item.sauce.sname }}</p>
+                                    {% endif %}
+                                    {% if item.toppings.all %}
+                                        <p><strong>Toppings:</strong> 
+                                            {% for topping in item.toppings.all %}
+                                                {{ topping.topping_name }}{% if not forloop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="item-price">₹{{ item.total_price|floatformat:2 }}</div>
+                            </div>
+                            <div class="item-footer">
+                                <form method="POST" action="{% url 'update_customized_quantity' item.id %}" style="display: flex; gap: 10px;">
+                                    {% csrf_token %}
+                                    <div class="quantity-controls">
+                                        <button type="submit" name="action" value="decrease" class="qty-btn">−</button>
+                                        <span class="qty-display">{{ item.quantity }}</span>
+                                        <button type="submit" name="action" value="increase" class="qty-btn">+</button>
+                                    </div>
+                                </form>
+                                <a href="{% url 'delete_customized_item' item.id %}" onclick="return confirm('Remove item?');" class="item-delete">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- ORDER SUMMARY SIDEBAR -->
+            <div class="order-summary">
+                <div class="summary-title">Order Summary</div>
+                
+                {% if cart_items %}
+                    <div class="summary-row">
+                        <span>Regular Items</span>
+                        <span>₹{{ regular_total }}</span>
+                    </div>
+                {% endif %}
+                
+                {% if customized_items %}
+                    <div class="summary-row">
+                        <span>Customized Items</span>
+                        <span>₹{{ customized_total|floatformat:2 }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>₹{{ grand_total|floatformat:2 }}</span>
+                </div>
+                
+                <button type="button" class="checkout-btn" data-bs-toggle="modal" data-bs-target="#checkoutModal">
+                    Proceed to Checkout
+                </button>
+                
+                <a href="{% url 'allfoods' %}" class="continue-shopping">Continue Shopping</a>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="empty-cart">
+            <div class="empty-cart-icon">🛒</div>
+            <p class="empty-cart-text">Your cart is empty</p>
+            <a href="{% url 'allfoods' %}" class="continue-shopping">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- CHECKOUT MODAL
+<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="checkoutModalLabel" style="color: #111827; font-weight: 600;">Delivery Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'buy_now' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="customerName">Full Name</label>
+                        <input type="text" class="form-control" id="customerName" name="customer_name" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="alert" role="alert">
+                        <strong>Order Total: ₹{{ grand_total|floatformat:2 }}</strong>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        Complete Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> -->
+
+<!-- CHECKOUT MODAL -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" style="color:#111827;font-weight:600;">Delivery Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form method="POST" action="{% url 'buy_now' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+
+          <!-- Name -->
+          <div class="mb-3">
+            <label class="form-label fw-bold" style="font-size:.875rem;">Full Name</label>
+            <input
+              type="text"
+              class="form-control"
+              name="customer_name"
+              placeholder="Enter your full name"
+              required
+              style="border-radius:8px;"
+            >
+          </div>
+
+          <!-- Email  ← NEW -->
+          <div class="mb-3">
+            <label class="form-label fw-bold" style="font-size:.875rem;">
+              Email <span style="color:#aaa;font-weight:400;">(order confirmation will be sent here)</span>
+            </label>
+            <input
+              type="email"
+              class="form-control"
+              name="customer_email"
+              placeholder="you@example.com"
+              required
+              style="border-radius:8px;"
+            >
+          </div>
+
+          <!-- Total -->
+          <div class="alert alert-light border" style="border-radius:8px;">
+            <strong>Order Total: ₹{{ grand_total|floatformat:2 }}</strong>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success fw-bold">Complete Order</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}

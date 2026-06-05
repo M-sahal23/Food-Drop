@@ -1,0 +1,152 @@
+================================================================================
+                    QUICK REFERENCE GUIDE
+                      Quantity Controls Update
+================================================================================
+
+WHAT CHANGED: January 28, 2026
+──────────────────────────────
+
+✓ Added quantity spinners for SAUCE options
+✓ Added quantity spinners for TOPPINGS options  
+✓ Improved price display spacing in cart
+✓ Better visual formatting for customization details
+
+
+HOW TO USE (As Customer):
+──────────────────────────
+
+1. Customize Page → Sauce Section:
+   • Select a sauce radio button
+   • Set quantity next to it (1, 2, 3...)
+   • Example: Select "Garlic Sauce" with Qty: 2
+   → Price will be ₹10 × 2 = ₹20
+
+2. Customize Page → Toppings Section:
+   • Check topping checkbox
+   • Set quantity next to it
+   • Do this for each topping
+   • Example: 
+     ├─ Cheese ☑ Qty: 1 → ₹20
+     ├─ Pepperoni ☑ Qty: 3 → ₹45
+     └─ Onions ☑ Qty: 2 → ₹14
+
+3. In Cart:
+   • See each topping listed separately with its price
+   • All prices clearly spaced and visible
+   • Final total includes all quantities
+
+
+FILES MODIFIED:
+────────────────
+
+1. templates/foods/customize.html
+   • Sauce section: Added quantity input for each sauce
+   • Toppings section: Added quantity input for each topping
+   • Layout: Improved with flex display for alignment
+
+2. foods/views.py - save_customization()
+   • Now reads sauce_qty_<id> from form
+   • Now reads topping_qty_<id> from form
+   • Adds toppings multiple times based on quantity
+
+3. templates/foods/cart.html
+   • Added dotted borders between price lines
+   • Improved spacing: 12px margins, 8px padding
+   • Better visual hierarchy
+   • Yellow left border on customization info
+   • Separated toppings on individual lines in breakdown
+
+4. CART_FUNCTIONALITY_NOTES.txt
+   • Added v2.1 section with detailed documentation
+   • Updated examples with quantities
+   • Added code snippets
+   • Updated price calculation examples
+
+
+CODE CHANGES SUMMARY:
+──────────────────────
+
+customize.html - Sauce with Qty:
+```
+Qty: <input type="number" name="sauce_qty_{{ sauce.id }}" 
+            min="0" value="1" style="width: 50px;">
+```
+
+customize.html - Toppings with Qty:
+```
+Qty: <input type="number" name="topping_qty_{{ topping.id }}" 
+            min="0" value="1" style="width: 50px;">
+```
+
+views.py - Reading Quantities:
+```python
+sauce_qty = int(request.POST.get(f'sauce_qty_{sauce_id}', 1))
+topping_qty = int(request.POST.get(f'topping_qty_{topping_id}', 1))
+```
+
+
+EXAMPLE PRICING WITH QUANTITIES:
+─────────────────────────────────
+
+Pizza Base: ₹300
+- Large Size (1×): +₹50
+- Garlic Sauce (2 units): +₹20
+- Cheese Topping (1 unit): +₹20
+- Pepperoni Topping (3 units): +₹45
+- Onions Topping (2 units): +₹14
+───────────────────────────────
+Total Per Item: ₹449
+× Quantity: 2
+───────────────────────────────
+Grand Total: ₹898
+
+
+TESTING CHECKLIST:
+────────────────────
+
+☐ Open customize page
+☐ Select sauce with qty 2
+☐ Select multiple toppings with different quantities
+☐ Verify quantity fields appear
+☐ Add to cart
+☐ Check cart displays all items with quantities
+☐ Verify price breakdown shows each topping separately
+☐ Check spacing between price lines
+☐ Increase/decrease item quantity
+☐ Delete customized item
+☐ Verify cart calculation is correct
+
+
+TROUBLESHOOTING:
+──────────────────
+
+Q: Quantity inputs not showing?
+A: Clear browser cache, refresh page. Check customize.html saved correctly.
+
+Q: Prices calculating wrong?
+A: Verify topping is added multiple times in save_customization().
+   Check request.POST.getlist('toppings') receives correct IDs.
+
+Q: Spacing looks wrong in cart?
+A: Browser might not support flex layout. Check CSS in cart.html.
+   Ensure border-bottom and margin-bottom are set on .price-details p
+
+Q: Toppings showing duplicates?
+A: This is expected! If user selects Cheese Qty: 2, it shows twice.
+   This is correct behavior - each unit shown separately.
+
+
+NEXT STEPS (Optional Improvements):
+─────────────────────────────────────
+
+1. Add JavaScript for real-time price calculation
+2. Add toast notifications when items added
+3. Create "Recent Orders" feature to quickly repeat
+4. Add "Special Instructions" text field
+5. Implement loyalty points on orders
+6. Add delivery time estimation
+7. Create combo deals with preset customizations
+
+================================================================================
+                        END OF QUICK REFERENCE
+================================================================================

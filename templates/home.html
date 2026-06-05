@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background-color: var(--bg-secondary);
+    }
+
+    .hero-section {
+        background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 100%);
+        color: black;
+        padding: 100px 50px;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    /* Theme-specific hero backgrounds */
+    [data-theme="light"] .hero-section {
+       /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+        background-image: url("{% static 'images/hero-bg-light.jpg' %}");
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        background-position: center;
+        background-attachment: fixed;
+        filter: brightness(0.9);
+    }
+
+    [data-theme="dark"] .hero-section {
+       /* background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 100%); */
+        background-image: url("{% static 'images/hero-bg-dark.jpg' %}");
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Hero text styles  */
+    .hero-section h1 {
+        
+        font-size: 2.5rem;
+        color: #000 ;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .hero-section p {
+        font-size: 1.1rem;
+        margin-bottom: 20px;
+    }
+
+    .hero-cta {
+        display: inline-block;
+        background: white;
+        color: var(--accent);
+        padding: 12px 35px;
+        border-radius: 4px;
+        border: 0.5px solid var(--accent);
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .hero-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        color: var(--accent);
+    }
+
+    .container-custom {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding:  20px;
+        
+    }
+
+    /* MOBILE NAVIGATION */
+    .navbar-toggler {
+        border: none;
+        padding: 5px;
+    }
+
+    .navbar-toggler:focus {
+        box-shadow: none;
+        border: none;
+    }
+
+    /* QUICK ACTIONS */
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 40px;
+    }
+
+    .action-card {
+        background: var(--bg-card);
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px var(--shadow);
+        text-decoration: none;
+        color: inherit;
+        border: 1px solid var(--border-color);
+    }
+
+    .action-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 4px 12px var(--shadow);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .action-icon {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+    }
+
+    .action-text {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    /* SECTION TITLES */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 40px 0 20px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title-icon {
+        color: var(--accent);
+    }
+
+    /* PRODUCTS GRID */
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 40px;
+    }
+
+    .product-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px var(--shadow);
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 140px;
+        overflow: hidden;
+        background: var(--bg-secondary);
+    }
+
+    .product-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.2s ease;
+    }
+
+    .product-card:hover .product-image img {
+        transform: scale(1.05);
+    }
+
+    .product-info {
+        padding: 12px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.3;
+    }
+
+    .product-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+
+    .product-rating {
+        background: var(--accent);
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.8rem;
+    }
+
+    .product-price {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .product-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+    }
+
+    .btn-small {
+        flex: 1;
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.8rem;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    .btn-customize {
+        background: var(--bg-card);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+    }
+
+    .btn-customize:hover {
+        background: rgba(230, 57, 70, 0.08);
+    }
+
+    .btn-add {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-add:hover {
+        background: #c1121f;
+    }
+
+    /* BANNER */
+    .promo-banner {
+        background: linear-gradient(135deg, var(--accent) 0%, #c1121f 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 8px;
+        text-align: center;
+        margin: 40px 0;
+    }
+
+    .promo-banner h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .promo-banner p {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+
+    .promo-btn {
+        background: white;
+        color: var(--accent);
+        padding: 12px 30px;
+        border-radius: 4px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+
+    .promo-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    /* NO ITEMS MESSAGE */
+    .no-items {
+        text-align: center;
+        padding: 40px;
+        color: #7e8c8d;
+        background: white;
+        border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .hero-section h1 {
+            font-size: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+        }
+
+        .hero-section {
+            padding: 40px 20px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .product-image {
+            height: 110px;
+        }
+
+        .product-card {
+            border-radius: 6px;
+        }
+
+        .product-info {
+            padding: 10px;
+        }
+
+        .product-name {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .product-price {
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .product-actions {
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 6px;
+            font-size: 0.7rem;
+        }
+
+        .hero-section {
+            padding: 30px 15px;
+            margin-bottom: 30px;
+        }
+
+        .hero-section h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .hero-section p {
+            font-size: 0.95rem;
+        }
+
+        .container-custom {
+            padding: 0 12px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            margin: 25px 0 15px 0;
+        }
+
+        .quick-actions {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .action-card {
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .action-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .action-text {
+            font-size: 0.85rem;
+        }
+
+        .promo-banner {
+            padding: 25px 15px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+
+        .promo-banner h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .promo-banner p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .promo-btn {
+            padding: 10px 25px;
+            font-size: 0.9rem;
+        }
+
+        .no-items {
+            padding: 25px 15px;
+            border-radius: 8px;
+        }
+    }
+</style>
+
+<!-- HERO SECTION -->
+<div class="hero-section">
+    <div class="container-custom">
+        <h1>Welcome to FoodDrop</h1>
+        <p>Order food online from your favorite restaurants</p>
+        <a href="{% url 'allfoods' %}" class="hero-cta">Explore Restaurants</a>
+    </div>
+</div>
+
+<div class="container-custom">
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+        <a href="{% url 'allfoods' %}" class="action-card">
+            <div class="action-icon">🍕</div>
+            <div class="action-text">Browse All</div>
+        </a>
+        <a href="{% url 'cart' %}" class="action-card">
+            <div class="action-icon">🛒</div>
+            <div class="action-text">My Cart</div>
+        </a>
+        <a href="{% url 'allfoods' %}" class="action-card">
+            <div class="action-icon">⭐</div>
+            <div class="action-text">Top Rated</div>
+        </a>
+        <a href="{% url 'allfoods' %}" class="action-card">
+            <div class="action-icon">🎁</div>
+            <div class="action-text">Special Offers</div>
+        </a>
+    </div>
+
+    <!-- PROMO BANNER -->
+    <div class="promo-banner">
+        <h2>🎉 Special Offer!</h2>
+        <p>Get 20% OFF on your first order</p>
+        <a href="{% url 'allfoods' %}" class="promo-btn">Order Now</a>
+    </div>
+
+    <!-- TOP RATED FOODS -->
+    <div class="section-title">
+        <span class="section-title-icon">⭐</span>
+        <span>Top Rated Foods</span>
+    </div>
+
+    {% if top_rated_foods %}
+        <div class="products-grid">
+            {% for food in top_rated_foods %}
+                <div class="product-card">
+                    <a href="{% url 'fooddetails' food.id %}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%;">
+                        <div class="product-image">
+                            {% if food.food_img %}
+                                <img src="{{ food.food_img.url }}" alt="{{ food.name }}">
+                            {% else %}
+                                <img src="{% static 'images/defaultimg.png' %}" alt="No image">
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <p class="product-name">{{ food.name }}</p>
+                            <div class="product-meta">
+                                <span class="product-rating">★ {{ food.rating }}</span>
+                            </div>
+                            <div class="product-price">₹{{ food.price }}</div>
+                        </div>
+                    </a>
+                    <div class="product-actions">
+                        <a href="{% url 'customize' food.id %}" class="btn-small btn-customize" onclick="event.stopPropagation();">
+                            Customize
+                        </a>
+                        <a href="{% url 'addtocart' food.id %}" class="btn-small btn-add" onclick="event.stopPropagation();">
+                            Add
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-items">
+            <p>No top-rated foods available</p>
+        </div>
+    {% endif %}
+
+    <!-- POPULAR FOODS -->
+    <div class="section-title">
+        <span class="section-title-icon">🔥</span>
+        <span>Popular Foods</span>
+    </div>
+
+    {% if popular_foods %}
+        <div class="products-grid">
+            {% for food in popular_foods %}
+                <div class="product-card">
+                    <a href="{% url 'fooddetails' food.id %}" style="text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%;">
+                        <div class="product-image">
+                            {% if food.food_img %}
+                                <img src="{{ food.food_img.url }}" alt="{{ food.name }}">
+                            {% else %}
+                                <img src="{% static 'images/defaultimg.png' %}" alt="No image">
+                            {% endif %}
+                        </div>
+                        <div class="product-info">
+                            <p class="product-name">{{ food.name }}</p>
+                            <div class="product-meta">
+                                <span class="product-rating">★ {{ food.rating }}</span>
+                            </div>
+                            <div class="product-price">₹{{ food.price }}</div>
+                        </div>
+                    </a>
+                    <div class="product-actions">
+                        <a href="{% url 'customize' food.id %}" class="btn-small btn-customize" onclick="event.stopPropagation();">
+                            Customize
+                        </a>
+                        <a href="{% url 'addtocart' food.id %}" class="btn-small btn-add" onclick="event.stopPropagation();">
+                            Add
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- EXPLORE ALL -->
+    <div style="text-align: center; padding: 40px; background: white; border-radius: 8px; margin-bottom: 40px;">
+        <h2 style="margin-bottom: 15px; color: #1c1c1c;">View All Foods</h2>
+        <p style="color: #3f4242; margin-bottom: 20px;">Browse our complete menu with hundreds of delicious options</p>
+        <a href="{% url 'allfoods' %}" class="promo-btn" style="background: #ef4f5f; color: white;">
+            Explore All Foods
+        </a>
+    </div>
+</div>
+
+<script>
+    // Update home page to show top-rated and popular foods
+    // This script ensures proper category filtering and food display
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add any dynamic functionality here
+        console.log('Home page loaded');
+    });
+</script>
+
+{% endblock %}

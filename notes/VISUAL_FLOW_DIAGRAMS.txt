@@ -1,0 +1,294 @@
+================================================================================
+                          VISUAL FLOW DIAGRAMS
+                    Buy Now Feature - Complete Flow
+================================================================================
+
+================================================================================
+                       1. USER PURCHASE FLOW
+================================================================================
+
+                            ┌─────────────┐
+                            │  Home Page  │
+                            └──────┬──────┘
+                                   │
+                            ┌──────▼──────┐
+                    ┌──────▶│   Browse    │
+                    │       │   Foods     │
+                    │       └──────┬──────┘
+                    │              │
+                    │              │ Add to cart
+                    │              │
+              ┌─────┴──────┐       │
+              │ Cart Icon  │◄──────┘
+              │ +1 Count   │
+              └─────┬──────┘
+                    │
+            ┌───────▼────────┐
+            │  Cart Page     │
+            │ Shows Items    │
+            └───────┬────────┘
+                    │
+            ┌───────▼────────┐
+            │ Click "Buy Now"│
+            └───────┬────────┘
+                    │
+         ┌──────────▼──────────┐
+         │  Modal Opens        │
+         │  Enter Name         │
+         │  [Customer Name]    │
+         │  Total: ₹850.00     │
+         │ [Confirm Purchase]  │
+         └──────────┬──────────┘
+                    │
+            ┌───────▼────────┐
+            │  POST Request  │
+            │  /buy-now/     │
+            └───────┬────────┘
+                    │
+         ┌──────────▼──────────┐
+         │  Server Processing │
+         │  - Create Order    │
+         │  - Generate ID     │
+         │  - Save Items      │
+         │  - Clear Cart      │
+         └──────────┬──────────┘
+                    │
+       ┌────────────▼────────────┐
+       │  Order Confirmation     │
+       │  Page                   │
+       │ ✓ Order ID Shown        │
+       │ ✓ Items Listed          │
+       │ ✓ Total Displayed       │
+       └────────────┬────────────┘
+                    │
+       ┌────────────▼────────────┐
+       │  ✅ ORDER SAVED         │
+       │  In Database            │
+       │  Ready for Fulfillment  │
+       └────────────────────────┘
+
+
+================================================================================
+                    2. DATABASE STORAGE FLOW
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      ORDER PLACEMENT                            │
+└─────────────────────────────────────────────────────────────────┘
+
+STEP 1: User Submits Order
+────────────────────────────
+   Customer Name: John Doe
+   Items in Cart:
+   • Pizza x2 @ ₹300 = ₹600
+   • Burger x1 @ ₹250 = ₹250
+   TOTAL: ₹850
+
+STEP 2: Server Creates Order Record
+────────────────────────────────────
+   Order Table:
+   ┌──────────────────────────────────────────────┐
+   │ id: 1                                        │
+   │ order_id: ORD_20260128143025_A7F2B3E1       │
+   │ customer_name: John Doe                      │
+   │ total_price: 850.00                          │
+   │ status: PENDING                              │
+   │ created_at: 2026-01-28 14:30:25             │
+   │ updated_at: 2026-01-28 14:30:25             │
+   └──────────────────────────────────────────────┘
+
+STEP 3: Server Creates OrderItem Records
+──────────────────────────────────────────
+   OrderItem Table:
+   
+   Item 1:
+   ┌──────────────────────────────────────────────┐
+   │ id: 1                                        │
+   │ order_id: 1 (links to Order above)          │
+   │ food_id: 5 (Pizza food item)                │
+   │ quantity: 2                                  │
+   │ price: 600.00                               │
+   │ is_customized: False                        │
+   │ customization_details: ""                   │
+   └──────────────────────────────────────────────┘
+   
+   Item 2:
+   ┌──────────────────────────────────────────────┐
+   │ id: 2                                        │
+   │ order_id: 1 (links to Order above)          │
+   │ food_id: 7 (Burger food item)               │
+   │ quantity: 1                                  │
+   │ price: 250.00                               │
+   │ is_customized: True                         │
+   │ customization_details: {"size":"LARGE",...} │
+   └──────────────────────────────────────────────┘
+
+STEP 4: Cart Cleared
+─────────────────────
+   Cart Table:
+   (All items deleted)
+   
+   CustomizedCart Table:
+   (All customized items deleted)
+
+✅ COMPLETE! Order ready for processing
+
+================================================================================
+                    3. ADMIN INTERFACE VIEW
+================================================================================
+
+Admin Dashboard: Orders List
+┌─────────────────────────────────────────────────────────────────┐
+│ Orders                              [Filter ▼] [Search]         │
+├─────────────────────────────────────────────────────────────────┤
+│ Order ID           │ Customer    │ Price   │ Status    │ Date   │
+├─────────────────────────────────────────────────────────────────┤
+│ ORD_20260128..A7F2 │ John Doe    │ ₹850.00 │ PENDING   │ 28 Jan │
+│ ORD_20260128..B2E3 │ Jane Smith  │ ₹1250.00│ PROCESSING│ 28 Jan │
+│ ORD_20260127..C4D5 │ Mike Brown  │ ₹450.00 │ COMPLETED │ 27 Jan │
+└─────────────────────────────────────────────────────────────────┘
+
+Click on Order → View Details
+┌──────────────────────────────────────────────────────┐
+│ Order: ORD_20260128143025_A7F2B3E1                  │
+├──────────────────────────────────────────────────────┤
+│ Customer Name: John Doe                              │
+│ Status: [PENDING ▼] (can change)                    │
+│ Total Price: ₹850.00                                │
+│ Created: 2026-01-28 14:30:25                        │
+├──────────────────────────────────────────────────────┤
+│ Order Items (Inline):                               │
+│                                                      │
+│ Food       │ Quantity │ Price    │ Customized       │
+│ Pizza      │ 2        │ ₹600.00  │ No              │
+│ Burger     │ 1        │ ₹250.00  │ Yes             │
+│            │          │ (view)   │ (view details)  │
+└──────────────────────────────────────────────────────┘
+
+================================================================================
+                  4. DATA RELATIONSHIPS
+================================================================================
+
+Order Model (Parent)
+│
+├─ order_id (Unique) ──────────► ORD_20260128143025_A7F2B3E1
+├─ customer_name ──────────────► John Doe
+├─ total_price ────────────────► 850.00
+├─ status ─────────────────────► PENDING
+├─ created_at ─────────────────► 2026-01-28 14:30:25
+│
+└─ OrderItem (Children) 1:N
+   │
+   ├─ OrderItem 1
+   │  ├─ food ────────────────► Pizza (FoodItems: id=5)
+   │  ├─ quantity ───────────► 2
+   │  ├─ price ─────────────► 600.00
+   │  └─ is_customized ────► False
+   │
+   └─ OrderItem 2
+      ├─ food ────────────────► Burger (FoodItems: id=7)
+      ├─ quantity ───────────► 1
+      ├─ price ─────────────► 250.00
+      ├─ is_customized ────► True
+      └─ customization ────► {"size":"LARGE","sauce":"Chili",...}
+
+================================================================================
+                5. API ENDPOINTS FLOW
+================================================================================
+
+POST /foods/buy-now/
+    │
+    ├─ Input: customer_name (from modal form)
+    ├─ Validate: Not empty
+    ├─ Get: All cart items
+    ├─ Get: All customized items
+    ├─ Calculate: grand_total
+    ├─ Check: Not empty
+    │
+    ├─ Create: Order object
+    │  ├─ Auto-generate: order_id
+    │  └─ Set: status = PENDING
+    │
+    ├─ Create: OrderItem objects (regular)
+    ├─ Create: OrderItem objects (customized)
+    │
+    ├─ Delete: Cart.all()
+    ├─ Delete: CustomizedCart.all()
+    │
+    └─ Response: Redirect to /foods/order-confirmation/1/
+
+GET /foods/order-confirmation/<order_id>/
+    │
+    ├─ Get: Order object
+    ├─ Get: OrderItems related
+    ├─ Render: Template
+    │
+    └─ Response: HTML confirmation page
+
+GET /foods/api/cart-count/
+    │
+    ├─ Count: Cart.objects.count()
+    ├─ Count: CustomizedCart.objects.count()
+    ├─ Sum: total_count
+    │
+    └─ Response: JSON {"count": N}
+
+================================================================================
+              6. ORDER ID GENERATION BREAKDOWN
+================================================================================
+
+Generated Order ID Example:
+ORD_20260128143025_A7F2B3E1
+
+Breakdown:
+┌─────────────────────────────────────────────────────────────┐
+│ Component    │ Value           │ Meaning                    │
+├─────────────────────────────────────────────────────────────┤
+│ Prefix       │ ORD_            │ Order identifier           │
+│ Timestamp    │ 20260128143025  │ 2026-01-28 14:30:25       │
+│ Date Part    │ 20260128        │ 2026-01-28 (YYYYMMDD)     │
+│ Time Part    │ 143025          │ 14:30:25 (HHMMSS)         │
+│ UUID         │ A7F2B3E1        │ 8-char random hex         │
+└─────────────────────────────────────────────────────────────┘
+
+Why this format?
+✓ ORD_: Easy to recognize as Order ID
+✓ Timestamp: Sortable, human readable, contains creation time
+✓ UUID: Guarantees uniqueness, non-sequential, secure
+
+Generation Python Code:
+f"ORD_{datetime.strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8].upper()}"
+
+================================================================================
+                 7. COMPLETE LIFECYCLE
+================================================================================
+
+Timeline of an Order:
+
+01:00 PM  └─ Customer browses foods
+01:05 PM  └─ Customer adds 2 pizzas to cart
+01:06 PM  └─ Customer adds 1 burger (customized)
+01:08 PM  └─ Customer clicks "Buy Now"
+01:09 PM  └─ Customer enters name and confirms
+          │
+          └─ SERVER PROCESSING:
+             └─ Order record created: id=1
+             └─ order_id generated: ORD_20260128130900_ABCD1234
+             └─ OrderItem 1 created: Pizza x2
+             └─ OrderItem 2 created: Burger x1
+             └─ Cart cleared
+             │
+01:10 PM  └─ Confirmation page displays
+          └─ Customer sees order ID
+          └─ Customer can continue shopping
+
+Admin View:
+          └─ Order visible in admin list
+          └─ Can change status: PENDING → PROCESSING
+          └─ Can see items inline
+          └─ Can print order details
+          └─ Can export for fulfillment
+
+================================================================================
+                   END OF VISUAL DIAGRAMS
+================================================================================

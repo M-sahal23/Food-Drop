@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    /* Polished compact order history styles */
+    :root{--maxw:1100px;--accent:#fc8019;--muted:#6b7280;--bg:#ffffff}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;background:#fbfcfd;color:#0f172a}
+    .history-container{max-width:var(--maxw);margin:18px auto;padding:16px}
+    .history-header{padding:12px;border-bottom:1px solid #eef3f6}
+    .history-header h1{font-size:1.2rem;margin-bottom:6px}
+    .history-header p{color:var(--muted);margin-bottom:8px}
+    .header-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:12px}
+    .stat-card{padding:10px;border-radius:8px;background:transparent;border:1px solid #eef3f6;text-align:center}
+    .stat-value{font-weight:800;color:var(--accent)}
+    .empty-state{padding:28px;text-align:center;border:1px solid #f3f4f6;border-radius:8px}
+    .orders-grid{display:grid;gap:12px;margin-top:12px}
+    .order-card{padding:12px;border-radius:8px;background:var(--bg);border:1px solid #eef3f6}
+    .order-header-row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+    .order-id-value{font-family:monospace;font-weight:800;color:#0f172a}
+    .order-status-badge{padding:8px 12px;border-radius:14px;font-weight:800;font-size:0.75rem}
+    .status-pending{background:linear-gradient(135deg,#fff3cd,#fff1b8);color:#856404}
+    .status-processing{background:linear-gradient(135deg,#d1ecf1,#bdeef0);color:#0c5460}
+    .status-completed{background:linear-gradient(135deg,#d4edda,#bfeccf);color:#155724}
+    .status-cancelled{background:linear-gradient(135deg,#f8d7da,#f5c1c8);color:#721c24}
+    .order-info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid #f5f7f8}
+    .items-preview{margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+    .item-badge{display:inline-flex;align-items:center;gap:8px;background:#f8fafc;padding:6px 10px;border-radius:8px;border:1px solid #eef2f7;color:var(--muted);font-weight:600;margin-right:6px;margin-bottom:6px}
+    .item-thumb{width:36px;height:36px;border-radius:6px;overflow:hidden;display:inline-block}
+    .item-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .item-badge.customized{background:linear-gradient(135deg,#fff3cd,#fff1b8);color:#856404;border-color:#ffd966}
+    .total-amount{font-weight:800;color:var(--accent);margin-top:8px}
+    .order-actions{display:flex;gap:8px;margin-top:8px}
+    .order-btn{padding:8px 10px;border-radius:8px;border:1px solid #eee;background:#fff;cursor:pointer;font-weight:700;text-decoration:none;color:inherit}
+    .btn-primary{background:var(--accent);color:#fff;border:none}
+    .filter-section{display:flex;gap:8px;flex-wrap:wrap;padding:10px;border:1px solid #eef3f6;border-radius:8px;margin-top:12px}
+    .filter-btn{padding:8px 10px;border-radius:8px;border:1px solid #eef2f7;background:#fff;color:var(--muted);font-weight:700}
+    .filter-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+    @media(max-width:720px){.order-info-grid{grid-template-columns:repeat(2,1fr)}.order-actions{flex-direction:column}.filter-section{flex-direction:column;align-items:flex-start}}
+</style>
+
+<div class="history-container">
+    <!-- HEADER -->
+    <div class="history-header">
+        <h1>📋 Order History</h1>
+        <p>View all your past orders and track deliveries</p>
+
+        {% if orders %}
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ orders|length }}</div>
+                    <div class="stat-label">Total Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">
+                        ₹{% widthratio orders|length 1 1 %}
+                    </div>
+                    <div class="stat-label">Total Spent</div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- FILTER SECTION -->
+    {% if orders %}
+        <div class="filter-section">
+            <span class="filter-label">Filter by Status:</span>
+            <button class="filter-btn active" onclick="filterOrders('all', this)">All Orders</button>
+            <button class="filter-btn" onclick="filterOrders('PENDING', this)">Pending</button>
+            <button class="filter-btn" onclick="filterOrders('PROCESSING', this)">Processing</button>
+            <button class="filter-btn" onclick="filterOrders('COMPLETED', this)">Completed</button>
+            <button class="filter-btn" onclick="filterOrders('CANCELLED', this)">Cancelled</button>
+        </div>
+    {% endif %}
+
+    <!-- ORDERS LIST OR EMPTY STATE -->
+    {% if orders %}
+        <div class="orders-grid">
+            {% for order in orders %}
+                <div class="order-card" data-status="{{ order.status }}">
+                    <!-- ORDER HEADER -->
+                    <div class="order-header-row">
+                        <div class="order-id-section">
+                            <div class="order-id-label">Order ID</div>
+                            <div class="order-id-value">{{ order.order_id }}</div>
+                        </div>
+                        <span class="order-status-badge status-{{ order.status|lower }}">
+                            {{ order.status|upper }}
+                        </span>
+                    </div>
+
+                    <!-- ORDER INFO GRID -->
+                    <div class="order-info-grid">
+                        <div class="info-item">
+                            <div class="info-label">👤 Customer</div>
+                            <div class="info-value">{{ order.customer_name }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">📅 Date</div>
+                            <div class="info-value">{{ order.created_at|date:"d M, Y" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">🕐 Time</div>
+                            <div class="info-value">{{ order.created_at|date:"h:i A" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">📦 Items</div>
+                            <div class="info-value">{{ order.items.count }} Item{% if order.items.count > 1 %}s{% endif %}</div>
+                        </div>
+                    </div>
+
+                    <!-- ITEMS PREVIEW -->
+                    <div class="items-preview">
+                        {% for item in order.items.all|slice:":3" %}
+                            <span class="item-badge {% if item.is_customized %}customized{% endif %}">
+                                <span class="item-thumb">
+                                    {% if item.food.food_img %}
+                                        <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}">
+                                    {% else %}
+                                        <img src="{% static 'images/defaultimg.png' %}" alt="{{ item.food.name }}">
+                                    {% endif %}
+                                </span>
+                                {{ item.food.name }}
+                            </span>
+                        {% endfor %}
+                        {% if order.items.count > 3 %}
+                            <span class="item-badge">+{{ order.items.count|add:"-3" }} more</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- TOTAL AMOUNT -->
+                    <div class="total-amount">
+                        💰 ₹{{ order.total_price|floatformat:2 }}
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="order-actions">
+                        <a href="{% url 'order_tracking' order.order_id %}" class="order-btn btn-primary">
+                            📍 Track
+                        </a>
+                        <a href="{% url 'order_status' order.order_id %}" class="order-btn btn-secondary">
+                            📋 Details
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- EMPTY STATE -->
+        <div class="empty-state">
+            <div class="empty-icon">🛒</div>
+            <p class="empty-text">You haven't placed any orders yet</p>
+            <a href="{% url 'allfoods' %}" class="empty-link">Start Shopping</a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function filterOrders(status, button) {
+        const cards = document.querySelectorAll('.order-card');
+        const buttons = document.querySelectorAll('.filter-btn');
+
+        // Update active button
+        buttons.forEach(btn => btn.classList.remove('active'));
+        if (button) {
+            button.classList.add('active');
+        } else {
+            buttons[0].classList.add('active');
+        }
+
+        // Filter cards with animation
+        cards.forEach(card => {
+            const cardStatus = card.getAttribute('data-status');
+            if (status === 'all' || cardStatus === status) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="container mt-5">
+        <div class="jumbotron">
+            <h1>Add New Food Item</h1>
+            <form enctype="multipart/form-data" method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <!-- <label for="id_name">Food Name</label> -->
+                    {{ form.name|as_crispy_field }}
+                </div>
+
+                <div class="form-group">
+                    <!-- <label for="id_price">Price</label> -->
+                    {{ form.price|as_crispy_field }}
+                </div>
+
+                <div class="form-group">
+                    <!-- <label for="id_rating">Rating</label> -->
+                    {{ form.rating|as_crispy_field }}
+                </div>
+                
+                <div class="form-group">
+                    <!-- <label for="id_category">Category</label> -->
+                    {{ form.desc|as_crispy_field }}
+                </div>
+
+                <div class="form-group">
+                    <!-- <label for="id_category">Category</label> -->
+                    {{ form.category|as_crispy_field }}
+                </div>
+
+                <div class="form-group">
+                    <!-- <label for="id_food_img">Food Image</label> -->
+                    {{ form.food_img|as_crispy_field }}
+                </div>
+
+                <div class="form-group mt-3">
+                    <input type="submit" class="btn btn-success" value="Add Food Item">
+                    <a href="{% url 'allfoods' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+{% endblock %}

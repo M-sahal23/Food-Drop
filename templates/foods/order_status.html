@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  /* Clean compact Swiggy-like order status */
+  :root{--maxw:980px;--accent:#fc8019;--muted:#6b7280;--bg:#ffffff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;background:#fbfcfd;color:#0f172a}
+  .order-container{max-width:var(--maxw);margin:20px auto;padding:18px}
+  .order-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+  .order-id-box{padding:8px}
+  .order-id{font-family:monospace;color:var(--accent);font-weight:800;font-size:1.15rem}
+  .order-meta{color:var(--muted);font-size:0.95rem}
+
+  .order-header{margin-top:12px;padding:14px;border-radius:10px;background:var(--bg);border:1px solid #eef3f6;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .info-card{padding:10px;border-radius:8px;background:transparent}
+  .info-label{font-size:0.72rem;color:var(--muted);font-weight:700;text-transform:uppercase}
+  .info-value{font-weight:800;color:#0f172a;margin-top:6px}
+
+  .status-badge{display:inline-block;padding:6px 12px;border-radius:8px;font-weight:800;font-size:0.8rem;letter-spacing:0.4px}
+  .status-badge.pending{background:linear-gradient(135deg,#ffc107,#ffb300);color:#332a00}
+  .status-badge.processing{background:linear-gradient(135deg,#0ea5a4,#0b9b95);color:#fff}
+  .status-badge.completed{background:linear-gradient(135deg,#28a745,#1e7e34);color:#fff}
+  .status-badge.cancelled{background:linear-gradient(135deg,#6c757d,#545b62);color:#fff}
+
+  .status-timeline{margin-top:14px}
+  .timeline{display:flex;flex-direction:column;gap:10px}
+  .timeline-item{display:flex;gap:12px;align-items:flex-start}
+  .timeline-marker{width:12px;height:12px;border-radius:50%;border:3px solid #ddd;background:#fff;margin-top:6px}
+  .timeline-marker.completed{background:var(--accent);border-color:var(--accent)}
+  .timeline-content{background:var(--bg);padding:10px;border-radius:8px;border:1px solid #eef3f6;flex:1}
+  .timeline-title-item{font-weight:800;margin-bottom:6px}
+  .timeline-description{color:var(--muted);font-size:0.95rem}
+
+  .order-items{margin-top:14px;border-radius:8px;overflow:hidden}
+  .items-header{padding:10px 12px;font-weight:800;background:transparent}
+  .order-item{display:flex;gap:12px;align-items:center;padding:12px;border-top:1px solid #f5f7f8}
+  .item-image{width:72px;height:72px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+  .item-image img{width:100%;height:100%;object-fit:cover;display:block}
+  .item-details{flex:1}
+  .item-name{font-weight:800}
+  .item-meta{color:var(--muted);font-size:0.9rem;margin-top:4px}
+  .item-qty-price{text-align:right;min-width:110px}
+  .item-price{font-weight:900;color:var(--accent)}
+
+  .order-summary{margin-top:12px;padding:12px;border-radius:8px;border:1px solid #eef3f6;background:var(--bg)}
+  .summary-row{display:flex;justify-content:space-between;padding:6px 0;color:var(--muted)}
+  .summary-row.total{font-weight:900;color:#0f172a;padding-top:10px;border-top:1px solid #eef3f6}
+
+  .action-buttons{display:flex;gap:8px;margin-top:12px}
+  .btn-action{padding:10px 12px;border-radius:8px;border:1px solid #eee;background:#fff;cursor:pointer;font-weight:700;text-decoration:none;color:inherit}
+  .btn-primary{background:var(--accent);color:#fff;border:none}
+
+  @media(max-width:900px){.order-header{grid-template-columns:1fr}.item-qty-price{text-align:left;min-width:0}}
+  @media(max-width:720px){.order-top{flex-direction:column;align-items:flex-start}}
+</style>
+
+<div class="order-container">
+    <div class="order-top">
+        <div class="order-id-box">
+            <div class="order-id-label">Order Number</div>
+            <div class="order-id">{{ order.order_id }}</div>
+            <div class="order-meta">Placed on {{ order.created_at|date:"d M, Y - h:i A" }}</div>
+        </div>
+        <div>
+            <div class="info-label">Status</div>
+            <div class="info-value">
+                <span class="status-badge {{ order.status|lower }}">{{ order.status|upper }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="order-header">
+        <div class="info-card">
+            <div class="info-label">Customer Name</div>
+            <div class="info-value">{{ order.customer_name }}</div>
+        </div>
+        <div class="info-card">
+            <div class="info-label">Items</div>
+            <div class="info-value">{{ items_count }} item{% if items_count|add:-1 %}s{% endif %}</div>
+        </div>
+    </div>
+
+    <div class="status-timeline">
+        <div class="timeline-title">Order Tracking</div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-marker {% if order.status|lower != 'pending' %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-title-item">Order Placed</div>
+                    <div class="timeline-description">Your order has been placed.</div>
+                    <div class="timeline-time">{{ order.created_at|date:"d M, Y - h:i A" }}</div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-marker {% if order.status|lower == 'processing' or order.status|lower == 'completed' %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-title-item">Processing</div>
+                    <div class="timeline-description">We are processing your payment and preparing your order.</div>
+                </div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-marker {% if order.status|lower == 'completed' %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-title-item">Completed / Delivered</div>
+                    <div class="timeline-description">Order delivered to customer.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if order_items %}
+        <div class="order-items">
+            <div class="items-header">Order Items ({{ items_count }})</div>
+            {% for item in order_items %}
+                <div class="order-item">
+                    <div class="item-image" aria-hidden="false">
+                        {% if item.food.food_img %}
+                            <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}">
+                        {% else %}
+                            <img src="{% static 'images/defaultimg.png' %}" alt="{{ item.food.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="item-details">
+                        <div class="item-name">{{ item.food.name }}</div>
+                        <div class="item-meta">{{ item.food.category }}</div>
+                        {% if item.is_customized and item.customization_details %}
+                            <div class="item-customization">
+                                <strong>Customizations:</strong> {{ item.customization_details|truncatewords:12 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="item-qty-price">
+                        <div class="item-qty">Qty: {{ item.quantity }}</div>
+                        <div class="item-price">₹{{ item.price|floatformat:2 }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="order-summary">
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ items_total|floatformat:2 }}</span>
+        </div>
+        <div class="summary-row">
+            <span>Delivery Charges</span>
+            <span>₹0</span>
+        </div>
+        <div class="summary-row">
+            <span>Taxes & Fees</span>
+            <span>₹0</span>
+        </div>
+        <div class="summary-row total">
+            <span>Total Amount</span>
+            <span>₹{{ order.total_price|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="{% url 'allfoods' %}" class="btn-action">Continue Shopping</a>
+        <a href="{% url 'cart' %}" class="btn-action btn-primary">Back to Cart</a>
+    </div>
+</div>
+
+{% endblock %}

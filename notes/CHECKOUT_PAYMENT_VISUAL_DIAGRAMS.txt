@@ -1,0 +1,664 @@
+# CHECKOUT & PAYMENT SYSTEM - VISUAL DIAGRAMS & ARCHITECTURE
+
+## 🏗️ SYSTEM ARCHITECTURE
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                       FRONTEND LAYER                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │  Cart Page   │  │  Checkout    │  │   Payment    │               │
+│  │  (cart.html) │  │ (Modal + JS) │  │(payment.html)│               │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
+│         │                  │                  │                      │
+│         └──────────────────┴──────────────────┘                      │
+│                            │                                         │
+│                     [AJAX/POST Requests]                            │
+│                            │                                         │
+└────────────────────────────┼─────────────────────────────────────────┘
+                             │
+┌────────────────────────────┼─────────────────────────────────────────┐
+│                       BACKEND LAYER (Django)                         │
+├────────────────────────────┼─────────────────────────────────────────┤
+│                            │                                          │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              URL ROUTING (urls.py)                           │   │
+│  │                                                              │   │
+│  │  POST /foods/buy-now/              → buy_now()             │   │
+│  │  GET  /foods/order-confirmation/   → order_confirmation()  │   │
+│  │  GET  /foods/payment/<id>/         → payment_page()        │   │
+│  │  POST /foods/process-payment/<id>/ → process_payment()     │   │
+│  │  GET  /foods/payment-success/<id>/ → payment_success()     │   │
+│  │  GET  /foods/order-history/        → order_history()       │   │
+│  │  GET  /foods/order-tracking/<id>/  → order_tracking()      │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                            │                                         │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              VIEWS LAYER (views.py)                          │   │
+│  │                                                              │   │
+│  │  • buy_now()              [Create Order, Clear Cart]        │   │
+│  │  • payment_page()         [Show Payment Form]               │   │
+│  │  • process_payment()      [Process Payment, Update Status]  │   │
+│  │  • payment_success()      [Show Success, Clear Cart]        │   │
+│  │  • order_tracking()       [Show Timeline & Status]          │   │
+│  │  • order_history()        [Show All Orders]                 │   │
+│  │  • order_status()         [Show Order Details]              │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                            │                                         │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              MODELS LAYER (models.py)                        │   │
+│  │                                                              │   │
+│  │  • Order (id, order_id, customer_name, total, status)       │   │
+│  │  • OrderItem (order, food, qty, price, customization)       │   │
+│  │  • Cart (food, quantity, total_price)                       │   │
+│  │  • CustomizedCart (food, qty, size, base, sauce, toppings)  │   │
+│  │  • FoodItems (name, price, rating, category)                │   │
+│  └──────────────────────────────────────────────────────────────┘   │
+│                            │                                         │
+└────────────────────────────┼─────────────────────────────────────────┘
+                             │
+┌────────────────────────────┼─────────────────────────────────────────┐
+│                       DATABASE LAYER                                  │
+├────────────────────────────┼─────────────────────────────────────────┤
+│                            │                                          │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  SQLite Database (db.sqlite3)                                │  │
+│  │                                                              │  │
+│  │  ┌─────────────────┐  ┌──────────────────┐                 │  │
+│  │  │  foods_order    │  │  foods_orderitem │                 │  │
+│  │  ├─────────────────┤  ├──────────────────┤                 │  │
+│  │  │ id (PK)         │◄─┤ order_id (FK)    │                 │  │
+│  │  │ order_id        │  │ food_id (FK)     │                 │  │
+│  │  │ customer_name   │  │ quantity         │                 │  │
+│  │  │ total_price     │  │ price            │                 │  │
+│  │  │ status          │  │ is_customized    │                 │  │
+│  │  │ created_at      │  │ customization... │                 │  │
+│  │  │ updated_at      │  │                  │                 │  │
+│  │  └─────────────────┘  └──────────────────┘                 │  │
+│  │                                                              │  │
+│  │  ┌──────────────┐  ┌──────────────────────┐                │  │
+│  │  │  foods_cart  │  │ foods_customizedcart │                │  │
+│  │  ├──────────────┤  ├──────────────────────┤                │  │
+│  │  │ id           │  │ id                   │                │  │
+│  │  │ food_id (FK) │  │ food_id (FK)         │                │  │
+│  │  │ quantity     │  │ quantity             │                │  │
+│  │  │ total_price  │  │ size_id (FK)         │                │  │
+│  │  └──────────────┘  │ base_id (FK)         │                │  │
+│  │                    │ sauce_id (FK)        │                │  │
+│  │                    │ toppings (M2M)       │                │  │
+│  │                    │ total_price          │                │  │
+│  │                    └──────────────────────┘                │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🔄 CHECKOUT FLOW SEQUENCE
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        STEP 1: REVIEW CART                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  User Views Cart                                                       │
+│  ├─ Regular items with quantity controls                              │
+│  ├─ Customized items with all customizations                          │
+│  ├─ Order summary sidebar                                             │
+│  └─ "Proceed to Checkout" button ✓                                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    STEP 2: CHECKOUT MODAL OPENS                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Modal Dialog                                                          │
+│  ├─ Title: "Delivery Details"                                         │
+│  ├─ Input: Full Name (text field, required)                           │
+│  ├─ Alert: Shows Order Total in red box                               │
+│  ├─ Buttons:                                                           │
+│  │  ├─ Cancel (closes modal)                                          │
+│  │  └─ Complete Order (submits form) ✓                                │
+│  └─ Form Action: POST /foods/buy-now/                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│              STEP 3: BUY_NOW VIEW PROCESSING                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Backend Processing (buy_now function)                                │
+│  │                                                                     │
+│  ├─ 1️⃣ Validate customer_name                                         │
+│  │    └─ If empty → redirect to cart                                  │
+│  │                                                                     │
+│  ├─ 2️⃣ Get all cart items                                             │
+│  │    ├─ regular_cart_items = Cart.objects.all()                      │
+│  │    └─ customized_cart_items = CustomizedCart.objects.all()         │
+│  │                                                                     │
+│  ├─ 3️⃣ Calculate totals                                               │
+│  │    ├─ regular_total = sum(item.total_price)                        │
+│  │    ├─ customized_total = sum(float(item.total_price))              │
+│  │    └─ grand_total = regular_total + customized_total               │
+│  │                                                                     │
+│  ├─ 4️⃣ Create Order object                                            │
+│  │    ├─ order_id auto-generated: ORD_TIMESTAMP_UUID                  │
+│  │    ├─ customer_name = input name                                   │
+│  │    ├─ total_price = grand_total                                    │
+│  │    └─ status = 'PENDING'                                           │
+│  │                                                                     │
+│  ├─ 5️⃣ Create OrderItems for each cart item                           │
+│  │    ├─ For each regular item:                                       │
+│  │    │  └─ OrderItem(order, food, qty, price, is_customized=False)   │
+│  │    └─ For each customized item:                                    │
+│  │       └─ OrderItem(order, food, qty, price, is_customized=True)    │
+│  │                                                                     │
+│  ├─ 6️⃣ Clear cart items                                               │
+│  │    ├─ Cart.objects.all().delete()                                  │
+│  │    └─ CustomizedCart.objects.all().delete()                        │
+│  │                                                                     │
+│  └─ 7️⃣ Redirect to order confirmation                                 │
+│       └─ return redirect('order_confirmation', order_id=order.id)     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│           STEP 4: ORDER CONFIRMATION PAGE                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Page: /foods/order-confirmation/<order_id>/                          │
+│                                                                         │
+│  Display:                                                              │
+│  ├─ ✅ Success Header (green gradient)                                 │
+│  ├─ 🎉 Notification Message                                            │
+│  ├─ Order Details Box:                                                │
+│  │  ├─ Order ID (unique identifier)                                   │
+│  │  ├─ Customer Name                                                  │
+│  │  ├─ Status Badge: 🟨 PENDING                                        │
+│  │  └─ Order Date & Time                                              │
+│  ├─ Order Items Section:                                              │
+│  │  ├─ Item name + CUSTOMIZED badge (if applicable)                   │
+│  │  ├─ Quantity                                                       │
+│  │  ├─ Price                                                          │
+│  │  └─ Customization details (if customized)                          │
+│  ├─ Total Section (green box):                                        │
+│  │  └─ 💰 Total Amount: ₹XXXX.XX                                       │
+│  └─ Action Buttons:                                                   │
+│     ├─ 💳 Proceed to Payment ← NEW! ✓                                  │
+│     ├─ 📍 View Order Details                                          │
+│     └─ 🛒 Continue Shopping                                           │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 💳 PAYMENT FLOW SEQUENCE
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│              STEP 1: PAYMENT PAGE LOADS                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Page: /foods/payment/<order_id>/                                     │
+│                                                                         │
+│  Layout:                                                               │
+│  ┌─────────────────────────────────────────────────────────────────┐  │
+│  │ LEFT SIDE (2/3 width)          │ RIGHT SIDE (1/3 width)        │  │
+│  │                                │                               │  │
+│  │ Payment Methods                │ Order Summary                 │  │
+│  │ ┌───────────────────────────┐ │ ┌──────────────────────────┐ │  │
+│  │ │ ○ Credit/Debit Card    [✓]│ │ │ Order Summary           │ │  │
+│  │ │   ├─ Card Holder Name  │ │ │ │                         │ │  │
+│  │ │   ├─ Card Number (16)  │ │ │ │ Items:                 │ │  │
+│  │ │   ├─ Expiry (MM/YY)    │ │ │ │ ├─ Pizza x2: ₹500      │ │  │
+│  │ │   └─ CVV (3 digits)    │ │ │ │ ├─ Burger x1: ₹250     │ │  │
+│  │ │                        │ │ │ │ └─ Customized x1: ₹350 │ │  │
+│  │ └───────────────────────────┘ │ │                         │ │  │
+│  │ ○ UPI                      │ │ │ ─────────────────────  │ │  │
+│  │   └─ UPI ID            │ │ │ Total: ₹1,100.00       │ │  │
+│  │ ○ Net Banking         │ │ │                         │ │  │
+│  │ ○ Digital Wallet      │ │ │ [Complete Payment]      │ │  │
+│  │ ○ Cash on Delivery    │ │ │ [Cancel]                │ │  │
+│  │                        │ │ │                         │ │  │
+│  │ 🔒 Secure & Encrypted │ │ └──────────────────────────┘ │  │
+│  └────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│              STEP 2: SELECT PAYMENT METHOD                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  User Actions:                                                        │
+│  ├─ Select one payment method (radio button)                          │
+│  ├─ Corresponding form fields appear (toggle)                         │
+│  │  ├─ Card → Show card form fields                                  │
+│  │  ├─ UPI → Show UPI ID input                                       │
+│  │  ├─ Wallet → Show balance info                                    │
+│  │  └─ COD → No form needed                                          │
+│  ├─ Fill in required details                                         │
+│  │  └─ Auto-formatting: Card (spaces), Expiry (MM/YY)                │
+│  └─ Review order summary on the right                                │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│              STEP 3: SUBMIT PAYMENT FORM                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  User Action:                                                         │
+│  └─ Click "✓ Complete Payment" button                                 │
+│                                                                         │
+│  Form Validation (JavaScript):                                        │
+│  ├─ Check payment method selected                                     │
+│  ├─ If Card:                                                          │
+│  │  ├─ Card number length = 16                                        │
+│  │  ├─ Expiry contains /                                              │
+│  │  └─ CVV length = 3                                                 │
+│  └─ If valid → POST to /foods/process-payment/<order_id>/            │
+│     If invalid → Show alert & don't submit                            │
+│                                                                         │
+│  Form Data Sent:                                                      │
+│  ├─ payment_method: 'CARD' | 'UPI' | 'WALLET' | 'COD' | 'NETBANKING'│
+│  ├─ card_name (if card)                                               │
+│  ├─ card_number (if card)                                             │
+│  ├─ expiry_date (if card)                                             │
+│  ├─ cvv (if card)                                                     │
+│  ├─ upi_id (if UPI)                                                   │
+│  └─ csrf_token (Django security)                                      │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│           STEP 4: PROCESS_PAYMENT VIEW EXECUTION                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Backend Processing:                                                  │
+│  │                                                                     │
+│  ├─ 1️⃣ Check HTTP method = POST                                       │
+│  │                                                                     │
+│  ├─ 2️⃣ Get order from database                                        │
+│  │    └─ Order.objects.get(id=order_id)                               │
+│  │                                                                     │
+│  ├─ 3️⃣ Extract payment method                                         │
+│  │    └─ payment_method = request.POST.get('payment_method')          │
+│  │                                                                     │
+│  ├─ 4️⃣ PAYMENT GATEWAY INTEGRATION POINT ⭐                            │
+│  │    ├─ Current: Simulated (no real payment)                         │
+│  │    ├─ Production: Call Razorpay / Stripe / PayPal API              │
+│  │    │  ├─ Example Razorpay:                                         │
+│  │    │  │  payment = razorpay.payment.create({                       │
+│  │    │  │      'amount': int(order.total_price * 100),               │
+│  │    │  │      'currency': 'INR',                                    │
+│  │    │  │      'receipt': order.order_id                             │
+│  │    │  │  })                                                         │
+│  │    │  └─ Handle payment response & errors                          │
+│  │    │                                                                │
+│  │    └─ For now: Simulate success                                    │
+│  │                                                                     │
+│  ├─ 5️⃣ Update order status                                            │
+│  │    ├─ order.status = 'PROCESSING'                                  │
+│  │    └─ order.save()                                                 │
+│  │       (Payment successful indicator)                               │
+│  │                                                                     │
+│  └─ 6️⃣ Redirect to payment success                                    │
+│       └─ return redirect('payment_success', order_id=order.id)        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    ↓
+┌─────────────────────────────────────────────────────────────────────────┐
+│           STEP 5: PAYMENT SUCCESS PAGE DISPLAYS                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  Page: /foods/payment-success/<order_id>/                             │
+│                                                                         │
+│  ┌────────────────────────────────────────────────────────────────┐  │
+│  │  ✓ (animated checkmark)                                        │  │
+│  │  Payment Successful!                                           │  │
+│  │  Thank you for your order                                      │  │
+│  │                                                                 │  │
+│  │  ✓ Order confirmed and saved to your order history            │  │
+│  │                                                                 │  │
+│  │  ┌──────────────────────────────────────────────────────────┐ │  │
+│  │  │ Order ID: ORD_202401291500_A5F3B2E9                       │ │  │
+│  │  │ Customer Name: John Doe                                  │ │  │
+│  │  │ Order Date: 29-Jan-2026, 3:00 PM                         │ │  │
+│  │  │ Status: ✓ Processing                                     │ │  │
+│  │  └──────────────────────────────────────────────────────────┘ │  │
+│  │                                                                 │  │
+│  │  ┌──────────────────────────────────────────────────────────┐ │  │
+│  │  │ 📦 Order Items                                           │ │  │
+│  │  │ Pizza x2         ₹500.00                                 │ │  │
+│  │  │ Burger x1        ₹250.00                                 │ │  │
+│  │  │ Customized x1    ₹350.00                                 │ │  │
+│  │  └──────────────────────────────────────────────────────────┘ │  │
+│  │                                                                 │  │
+│  │  💰 Total Amount Paid: ₹1,100.00                              │  │
+│  │                                                                 │  │
+│  │  [Track Your Order] [View Order History] [Continue Shopping]  │  │
+│  │                                                                 │  │
+│  │  Thank you for your order!                                     │  │
+│  │  We'll notify you when it's on the way.                        │  │
+│  └────────────────────────────────────────────────────────────────┘  │
+│                                                                        │
+│  🔄 Behind the scenes:                                               │
+│  ├─ Cart items cleared (verified)                                    │
+│  ├─ Order status updated to PROCESSING                               │
+│  └─ Order saved in database for history                              │
+│                                                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📍 ORDER TRACKING TIMELINE
+
+```
+Timeline Status Visualization:
+
+┌────────────────────────────────────────────────────────────────────┐
+│                    ORDER TRACKING TIMELINE                         │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│ ┌─────────────────────────────────────────────────────────────┐  │
+│ │ Estimated Delivery Time: Within 30-45 minutes              │  │
+│ └─────────────────────────────────────────────────────────────┘  │
+│                                                                    │
+│  ●──────────●──────────●──────────●                              │
+│  │          │          │          │                              │
+│  ✓          ✓          ⏳         (empty)                        │
+│  │          │          │          │                              │
+│  ▼          ▼          ▼          ▼                              │
+│ Order     Process    Delivery    (Complete)                      │
+│ Placed    Starting   Pending     Status                          │
+│           (Now)                                                  │
+│                                                                    │
+├────────────────────────────────────────────────────────────────────┤
+│ CURRENT STATUS: 🔄 PROCESSING                                      │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│ Step 1: ✓ ORDER PLACED                                           │
+│ ├─ Status: Completed                                              │
+│ ├─ Time: 29-Jan-2026, 3:00 PM                                     │
+│ └─ Your order has been confirmed and received                    │
+│                                                                    │
+│ Step 2: ⚙️ PROCESSING (ACTIVE)                                   │
+│ ├─ Status: In Progress                                            │
+│ ├─ Details: Your order is being prepared in our kitchen          │
+│ └─ Current Step: 2 of 3                                           │
+│                                                                    │
+│ Step 3: 📦 DELIVERED                                             │
+│ ├─ Status: Pending                                                │
+│ ├─ Details: Waiting for delivery                                  │
+│ └─ Current Step: 3 of 3                                           │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+Status Stage Progression:
+
+PENDING (Step 1)
+    ↓
+PROCESSING (Step 2) ← Current Status
+    ↓
+COMPLETED (Step 3)
+
+Or at any point:
+    ↓
+CANCELLED (Step 0)
+```
+
+---
+
+## 📋 ORDER HISTORY FILTER VIEW
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                      ORDER HISTORY                                 │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│ 📋 Order History                                                  │
+│ View all your past orders and track deliveries                   │
+│                                                                    │
+│ ┌─────────────────┐  ┌──────────────┐                             │
+│ │ Total Orders: 5 │  │ Total Spent: │                             │
+│ │      ║          │  │   ₹10,500    │                             │
+│ └─────────────────┘  └──────────────┘                             │
+│                                                                    │
+├─ Filter by Status: ────────────────────────────────────────────┤
+│ [All] [Pending] [Processing] [Completed] [Cancelled]            │
+│  ✓                                                               │
+│                                                                    │
+├─ Order Cards (Filtered):                                        ─┤
+│                                                                    │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ Order ID: ORD_202401291500_A5F3B2E9    Status: 🔵 PROCESSING │ │
+│ │                                                              │ │
+│ │ Customer: John Doe              Date: 29-Jan-2026, 3:00 PM  │ │
+│ │ Items: 3 items                                               │ │
+│ │                                                              │ │
+│ │ 📦 Items Ordered:                                            │ │
+│ │ [Pizza] [Burger] [Customized ✓] [+1 more]                  │ │
+│ │                                                              │ │
+│ │ Total: ₹1,100.00                                             │ │
+│ │                                                              │ │
+│ │ [📍 Track Order] [📋 View Details]                          │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│                                                                    │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ Order ID: ORD_202401281400_B7F2C3D1    Status: 🟢 COMPLETED │ │
+│ │                                                              │ │
+│ │ Customer: Jane Smith             Date: 28-Jan-2026, 2:00 PM  │ │
+│ │ Items: 2 items                                               │ │
+│ │                                                              │ │
+│ │ 📦 Items Ordered:                                            │ │
+│ │ [Pizza] [Beverage]                                           │ │
+│ │                                                              │ │
+│ │ Total: ₹450.00                                               │ │
+│ │                                                              │ │
+│ │ [📍 Track Order] [📋 View Details]                          │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│                                                                    │
+│ ┌──────────────────────────────────────────────────────────────┐ │
+│ │ Order ID: ORD_202401271000_C8F4D5E2    Status: 🟨 PENDING   │ │
+│ │                                                              │ │
+│ │ Customer: Michael Brown          Date: 27-Jan-2026, 10:00 AM │ │
+│ │ Items: 4 items                                               │ │
+│ │                                                              │ │
+│ │ 📦 Items Ordered:                                            │ │
+│ │ [Burger] [Fries] [Dessert] [+1 more]                        │ │
+│ │                                                              │ │
+│ │ Total: ₹850.00                                               │ │
+│ │                                                              │ │
+│ │ [📍 Track Order] [📋 View Details]                          │ │
+│ └──────────────────────────────────────────────────────────────┘ │
+│                                                                    │
+│ [More orders...]                                                  │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+
+Status Color Legend:
+🟨 PENDING    = Yellow background  (Waiting for payment)
+🔵 PROCESSING = Blue background    (Being prepared)
+🟢 COMPLETED  = Green background   (Delivered)
+🔴 CANCELLED  = Red background     (Cancelled)
+```
+
+---
+
+## 📊 DATA RELATIONSHIPS DIAGRAM
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                    DATABASE RELATIONSHIPS                     │
+└──────────────────────────────────────────────────────────────┘
+
+                        FoodItems
+                            ▲
+                            │
+                   ┌────────┼────────┐
+                   │        │        │
+                   │        │        │
+              (1:N)│   (1:N)│   (1:N)│
+                   │        │        │
+                   ▼        ▼        ▼
+                ┌─────┐  ┌──────┐  ┌────────────┐
+                │Cart │  │Order │  │Customized │
+                │     │  │Item  │  │   Cart    │
+                └─────┘  └──────┘  └────────────┘
+                            ▲
+                            │
+                       (1:N)│
+                            │
+                         ┌──┴──┐
+                         │     │
+                      Order  (empty)
+                         │
+                      (1:1)│ (order_id)
+                            │
+                            │
+
+
+Detailed Relationships:
+
+Order (Master)
+│
+├─── order_id (unique: ORD_TIMESTAMP_UUID)
+├─── customer_name
+├─── total_price
+├─── status (PENDING/PROCESSING/COMPLETED/CANCELLED)
+├─── created_at
+└─── updated_at
+     │
+     └─── OrderItem (1:N) ─ Multiple items per order
+          │
+          ├─── food_id (FK) ──→ FoodItems
+          ├─── quantity
+          ├─── price (frozen)
+          ├─── is_customized
+          └─── customization_details (JSON)
+
+Cart (Temporary)
+│
+├─── food_id (FK) ──→ FoodItems
+├─── quantity
+└─── total_price
+     └─ Cleared after order creation
+
+CustomizedCart (Temporary)
+│
+├─── food_id (FK) ──→ FoodItems
+├─── quantity
+├─── size_id (FK) ──→ SizeChart (M:1)
+├─── base_id (FK) ──→ BaseType (M:1)
+├─── sauce_id (FK) ──→ Sauce (M:1)
+├─── toppings (M2M) ──→ Toppings
+└─ Cleared after order creation
+```
+
+---
+
+## 🔀 USER JOURNEY MAP
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                        USER JOURNEY MAP                             │
+├────────────────────────────────────────────────────────────────────┤
+│                                                                    │
+│ ┌────────────┐                                                    │
+│ │ Browse     │                                                    │
+│ │ Food Items │                                                    │
+│ └──────┬─────┘                                                    │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌────────────────────┐                                            │
+│ │ Add to Cart        │                                            │
+│ │ (Regular/Customized)                                            │
+│ └──────┬─────────────┘                                            │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌────────────────────────────────────┐                            │
+│ │ View Cart                          │                            │
+│ │ (Review items, update quantities)  │                            │
+│ └──────┬─────────────────────────────┘                            │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌────────────────────────────┐                                    │
+│ │ Checkout Modal             │◄── "Proceed to Checkout"          │
+│ │ (Enter customer name)      │                                    │
+│ └──────┬─────────────────────┘                                    │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌────────────────────────────┐                                    │
+│ │ Order Confirmation Page    │◄── "Complete Order"              │
+│ │ (Review order details)     │                                    │
+│ └──────┬─────────────────────┘                                    │
+│        │                                                           │
+│   ┌────┴────┐                                                     │
+│   │          │                                                     │
+│   ▼          ▼                                                     │
+│ [Pay]    [Details]  ← Two options                                │
+│   │          │                                                     │
+│   ▼          │                                                     │
+│ ┌──────────────────────────────┐                                  │
+│ │ Payment Page                 │◄── "Proceed to Payment"         │
+│ │ (Select method & fill form)  │                                  │
+│ └──────┬───────────────────────┘                                  │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌──────────────────────────────┐                                  │
+│ │ Process Payment              │◄── "Complete Payment"           │
+│ │ (Backend processing)         │                                  │
+│ └──────┬───────────────────────┘                                  │
+│        │                                                           │
+│        ▼                                                           │
+│ ┌──────────────────────────────┐                                  │
+│ │ Payment Success Page         │                                  │
+│ │ (Confirmation + animation)   │                                  │
+│ │ (Cart cleared)               │                                  │
+│ └──────┬───────────────────────┘                                  │
+│        │                                                           │
+│   ┌────┴───────────────────┐                                      │
+│   │                        │                                      │
+│   ▼                        ▼                                      │
+│ ┌────────────┐      ┌─────────────────────┐                       │
+│ │ Track      │      │ Order History       │                       │
+│ │ Order      │      │ (All past orders)   │                       │
+│ │(Timeline)  │      │ (Filter by status)  │                       │
+│ └────────────┘      └─────────────────────┘                       │
+│        │                    │                                     │
+│        │                    ▼                                     │
+│        │          ┌─────────────────────┐                         │
+│        │          │ Track from History  │                         │
+│        │          │ (Click order card)  │                         │
+│        │          └─────────────────────┘                         │
+│        │                    │                                     │
+│        └────────┬───────────┘                                     │
+│                 │                                                 │
+│                 ▼                                                 │
+│        ┌────────────────────┐                                     │
+│        │ Order Tracking     │                                     │
+│        │ (Status timeline)  │                                     │
+│        └─────┬──────────────┘                                     │
+│              │                                                    │
+│         ┌────┴────┐                                               │
+│         │         │                                               │
+│         ▼         ▼                                               │
+│      [Shop]  [History]  ← Exit points                            │
+│         │         │                                               │
+│         ▼         ▼                                               │
+│      [Back to     [Back to                                        │
+│       Cart]       History]                                        │
+│                                                                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+**Created**: January 29, 2026
+**Version**: 3.1
+**Status**: ✅ Complete
+

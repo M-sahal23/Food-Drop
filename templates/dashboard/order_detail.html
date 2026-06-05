@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  .detail-root  { max-width: 860px; margin: 32px auto; padding: 0 16px 60px; }
+  .back-row     { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  .back-btn     { display:inline-flex; align-items:center; gap:6px; padding:7px 16px;
+                  border:1.5px solid var(--border-color); border-radius:50px;
+                  font-size:.82rem; font-weight:600; color:var(--text-primary);
+                  text-decoration:none; transition:all .15s; }
+  .back-btn:hover { border-color:#e63946; color:#e63946; }
+
+  .page-title   { font-size:1.15rem; font-weight:700; color:var(--text-primary); margin:0; }
+
+  .detail-grid  { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+  .d-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .d-card-head {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .d-card-head h2 {
+    font-size: .82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+  .d-card-head i { font-size:1rem; color:#e63946; }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: .875rem;
+    gap: 16px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key   { color: var(--text-secondary); white-space: nowrap; }
+  .info-val   { font-weight: 600; color: var(--text-primary); text-align:right; }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .item-row:last-child { border-bottom: none; }
+  .item-img {
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+  }
+  .item-img-placeholder {
+    width: 50px; height: 50px;
+    border-radius: 10px;
+    background: var(--bg-secondary);
+    display: flex; align-items:center;
+    justify-content:center; font-size:1.4rem;
+    flex-shrink: 0;
+  }
+  .item-name  { font-weight: 700; font-size:.9rem; color:var(--text-primary); }
+  .item-meta  { font-size:.78rem; color:var(--text-secondary); margin-top:2px; }
+  .item-price { font-weight: 700; color:#2ecc71; margin-left:auto; white-space:nowrap; }
+  .custom-tag {
+    display:inline-block; font-size:.68rem; font-weight:700;
+    background:#fff3e0; color:#c0392b; border-radius:20px;
+    padding:2px 8px; margin-left:6px; text-transform:uppercase;
+  }
+  [data-theme="dark"] .custom-tag { background:#2d1f1f; color:#fca5a5; }
+
+  .total-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 20px;
+    background: var(--bg-secondary);
+    font-weight:700; font-size:1rem;
+  }
+
+  .sbadge {
+    font-size:.72rem; font-weight:700; padding:4px 12px;
+    border-radius:20px; text-transform:uppercase; letter-spacing:.3px;
+  }
+  .sbadge-PENDING    { background:#fff8e1; color:#7a5c00; }
+  .sbadge-PROCESSING { background:#e3f2fd; color:#0d47a1; }
+  .sbadge-COMPLETED  { background:#e8f5e9; color:#1b5e20; }
+  .sbadge-CANCELLED  { background:#ffebee; color:#b71c1c; }
+  [data-theme="dark"] .sbadge-PENDING    { background:#3d2e00; color:#ffd54f; }
+  [data-theme="dark"] .sbadge-PROCESSING { background:#0d2137; color:#90caf9; }
+  [data-theme="dark"] .sbadge-COMPLETED  { background:#0d2e10; color:#a5d6a7; }
+  [data-theme="dark"] .sbadge-CANCELLED  { background:#2e0d0d; color:#ef9a9a; }
+
+  .status-form { padding:20px; }
+  .status-select {
+    width:100%; padding:10px 14px; border-radius:10px;
+    border:1.5px solid var(--border-color); font-size:.9rem;
+    background:var(--bg-card); color:var(--text-primary);
+    margin-bottom:12px; outline:none;
+  }
+  .status-select:focus { border-color:#e63946; }
+
+  .timeline { padding:20px; }
+  .tl-item  {
+    display:flex; gap:14px; padding-bottom:18px;
+    position:relative;
+  }
+  .tl-item:not(:last-child)::before {
+    content:''; position:absolute;
+    left:15px; top:32px; bottom:0;
+    width:2px; background:var(--border-color);
+  }
+  .tl-dot {
+    width:30px; height:30px; border-radius:50%;
+    background:var(--bg-secondary);
+    border:2px solid var(--border-color);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-size:.85rem;
+  }
+  .tl-dot.done { background:#e8f5e9; border-color:#2ecc71; }
+  .tl-dot.active { background:#e3f2fd; border-color:#3b82f6; }
+  .tl-label { font-size:.875rem; font-weight:600; color:var(--text-primary); }
+  .tl-sub   { font-size:.78rem; color:var(--text-secondary); margin-top:2px; }
+
+  @media (max-width:700px) {
+    .detail-grid { grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="detail-root">
+
+  <div class="back-row">
+    <a href="{% url 'owner_dashboard' %}" class="back-btn">
+      <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+    <h1 class="page-title">Order Detail</h1>
+    <span class="sbadge sbadge-{{ order.status }}">{{ order.status }}</span>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-success rounded-3 mb-4 d-flex align-items-center gap-2">
+        <i class="bi bi-check-circle-fill text-success"></i> {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Order ID banner -->
+  <div style="background:var(--bg-card);border:1px solid var(--border-color);
+              border-radius:14px;padding:16px 20px;margin-bottom:20px;
+              display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;
+                  letter-spacing:.6px;color:var(--text-secondary);margin-bottom:4px;">
+        Order ID
+      </div>
+      <div style="font-family:monospace;font-size:1rem;font-weight:700;color:var(--text-primary);">
+        {{ order.order_id }}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:.72rem;color:var(--text-secondary);">Placed on</div>
+      <div style="font-weight:600;color:var(--text-primary);font-size:.9rem;">
+        {{ order.created_at|date:"d M Y, H:i" }}
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+
+    <!-- Customer info -->
+    <div>
+      <div class="d-card">
+        <div class="d-card-head">
+          <i class="bi bi-person"></i>
+          <h2>Customer Details</h2>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Name</span>
+          <span class="info-val">{{ order.customer_name }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Email</span>
+          <span class="info-val" style="font-size:.85rem;">
+            {{ order.customer_email|default:"Not provided" }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Order Date</span>
+          <span class="info-val">{{ order.created_at|date:"d M Y" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Order Time</span>
+          <span class="info-val">{{ order.created_at|date:"H:i" }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Last Updated</span>
+          <span class="info-val" style="font-size:.82rem;">
+            {{ order.updated_at|date:"d M Y, H:i" }}
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Total Amount</span>
+          <span class="info-val" style="color:#2ecc71;font-size:1.05rem;">
+            ₹{{ order.total_price }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Update status + timeline -->
+    <div>
+      <div class="d-card">
+        <div class="d-card-head">
+          <i class="bi bi-arrow-repeat"></i>
+          <h2>Update Status</h2>
+        </div>
+        <form method="POST" class="status-form">
+          {% csrf_token %}
+          <label style="font-size:.82rem;font-weight:600;color:var(--text-secondary);
+                        display:block;margin-bottom:6px;">
+            Current: <span class="sbadge sbadge-{{ order.status }}">{{ order.status }}</span>
+          </label>
+          <select name="status" class="status-select">
+            <option value="PENDING"    {% if order.status == 'PENDING' %}selected{% endif %}>
+              ⏳ Pending
+            </option>
+            <option value="PROCESSING" {% if order.status == 'PROCESSING' %}selected{% endif %}>
+              🔄 Processing
+            </option>
+            <option value="COMPLETED"  {% if order.status == 'COMPLETED' %}selected{% endif %}>
+              ✅ Completed
+            </option>
+            <option value="CANCELLED"  {% if order.status == 'CANCELLED' %}selected{% endif %}>
+              ❌ Cancelled
+            </option>
+          </select>
+          <button type="submit"
+                  class="btn btn-danger w-100 rounded-pill fw-bold"
+                  style="font-size:.875rem;">
+            Update Status
+          </button>
+        </form>
+      </div>
+
+      <!-- Order timeline -->
+      <div class="d-card">
+        <div class="d-card-head">
+          <i class="bi bi-clock-history"></i>
+          <h2>Order Timeline</h2>
+        </div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-dot done">✓</div>
+            <div>
+              <div class="tl-label">Order Placed</div>
+              <div class="tl-sub">{{ order.created_at|date:"d M, H:i" }}</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot {% if order.status == 'PROCESSING' or order.status == 'COMPLETED' %}done{% elif order.status == 'CANCELLED' %}{% else %}{% endif %}">
+              {% if order.status == 'PROCESSING' or order.status == 'COMPLETED' %}✓
+              {% elif order.status == 'CANCELLED' %}✕
+              {% else %}2{% endif %}
+            </div>
+            <div>
+              <div class="tl-label">Processing</div>
+              <div class="tl-sub">Kitchen preparing your order</div>
+            </div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-dot {% if order.status == 'COMPLETED' %}done{% endif %}">
+              {% if order.status == 'COMPLETED' %}✓{% else %}3{% endif %}
+            </div>
+            <div>
+              <div class="tl-label">Delivered</div>
+              <div class="tl-sub">
+                {% if order.status == 'COMPLETED' %}
+                  {{ order.updated_at|date:"d M, H:i" }}
+                {% else %}
+                  Pending delivery
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Order items -->
+  <div class="d-card">
+    <div class="d-card-head">
+      <i class="bi bi-bag"></i>
+      <h2>Ordered Items ({{ order_items.count }})</h2>
+    </div>
+
+    {% for item in order_items %}
+    <div class="item-row">
+      {% if item.food and item.food.food_img %}
+        <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}" class="item-img">
+      {% else %}
+        <div class="item-img-placeholder">🍽️</div>
+      {% endif %}
+      <div style="flex:1;min-width:0;">
+        <div class="item-name">
+          {% if item.food %}{{ item.food.name }}{% else %}Food deleted{% endif %}
+          {% if item.is_customized %}
+            <span class="custom-tag">Customized</span>
+          {% endif %}
+        </div>
+        <div class="item-meta">
+          Qty: {{ item.quantity }}
+          {% if item.food %}· {{ item.food.category }}{% endif %}
+        </div>
+        {% if item.is_customized and item.customization_details %}
+          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px;">
+            {{ item.customization_details|truncatechars:80 }}
+          </div>
+        {% endif %}
+      </div>
+      <div class="item-price">₹{{ item.price }}</div>
+    </div>
+    {% endfor %}
+
+    <div class="total-row">
+      <span>Grand Total</span>
+      <span style="color:#2ecc71;font-size:1.1rem;">₹{{ order.total_price }}</span>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

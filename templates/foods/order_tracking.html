@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    /* Polished compact tracking styles */
+    :root{--maxw:980px;--accent:#fc8019;--muted:#6b7280;--bg:#ffffff}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;background:#fbfcfd;color:#111}
+    .tracking-container{max-width:var(--maxw);margin:18px auto;padding:16px}
+    .tracking-header{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #eef3f6}
+    .tracking-header h1{font-size:1.05rem;margin:0}
+    .order-id-box{background:transparent}
+    .order-id-display{font-family:monospace;color:var(--accent);font-weight:800}
+    .tracking-section{margin-top:12px}
+    .section-title{font-weight:800;color:#0f172a;margin-bottom:10px}
+    .timeline{display:flex;flex-direction:column;gap:12px}
+    .timeline-item{display:flex;gap:12px;align-items:flex-start}
+    .timeline-marker{width:12px;height:12px;border-radius:50%;border:3px solid #ddd;background:#fff;margin-top:6px}
+    .timeline-marker.completed{background:var(--accent);border-color:var(--accent)}
+    .timeline-content{background:var(--bg);padding:10px;border-radius:8px;border:1px solid #eef3f6;flex:1}
+    .timeline-status{font-weight:800;color:#0f172a;margin-bottom:6px}
+    .timeline-description{color:var(--muted);font-size:0.95rem}
+    .delivery-info{margin-top:10px;padding:10px;border-radius:8px;background:#fff;border:1px solid #f3f3f3}
+    .order-details{margin-top:12px;border-top:1px solid #f5f7f8;padding-top:12px}
+    .details-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+    .detail-card{padding:10px;border-radius:8px;background:transparent}
+    .items-section{margin-top:12px}
+    .item-card{display:flex;justify-content:space-between;align-items:center;padding:10px;border-top:1px solid #f5f7f8}
+    .item-name{font-weight:800}
+    .item-price{font-weight:900;color:var(--accent)}
+    .item-image{width:60px;height:60px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#fff}
+    .item-image img{width:100%;height:100%;object-fit:cover;display:block}
+    .total-section{margin-top:12px;padding:10px;border-radius:8px;border:1px solid #eef3f6;display:flex;justify-content:space-between;align-items:center}
+    .action-buttons{display:flex;gap:8px;margin-top:12px}
+    .btn{padding:10px 12px;border-radius:8px;border:1px solid #eee;background:#fff;cursor:pointer;font-weight:700;text-decoration:none;color:inherit}
+    .btn-primary{background:var(--accent);color:#fff;border:none}
+    @media(max-width:720px){.tracking-container{padding:12px}.action-buttons{flex-direction:column}.btn{width:100%}}
+</style>
+
+<div class="tracking-container">
+    <!-- HEADER -->
+    <div class="tracking-header">
+        <h1>📍 Track Your Order</h1>
+        <div class="order-id-box">
+            <div class="order-id-label">Order ID</div>
+            <div class="order-id-display">{{ order.order_id }}</div>
+        </div>
+    </div>
+
+    <!-- TRACKING TIMELINE -->
+    <div class="tracking-section">
+        <div class="section-title">Order Status Timeline</div>
+
+        <div class="timeline">
+            <!-- ORDER PLACED -->
+            <div class="timeline-item">
+                <div class="timeline-marker completed"></div>
+                <div class="timeline-content">
+                    <div class="timeline-status">Order Placed</div>
+                    <div class="timeline-description">Your order has been received and confirmed.</div>
+                    <div class="timeline-time">{{ order.created_at|date:"d M Y, h:i A" }}</div>
+                </div>
+            </div>
+
+            <!-- PROCESSING -->
+            <div class="timeline-item">
+                <div class="timeline-marker {% if order.status|lower in 'processing,completed' %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-status">Processing</div>
+                    <div class="timeline-description">{% if order.status|lower in 'processing,completed' %}Your order is being prepared by the restaurant.{% else %}Waiting for restaurant confirmation.{% endif %}</div>
+                </div>
+            </div>
+
+            <!-- COMPLETED/DELIVERED -->
+            <div class="timeline-item">
+                <div class="timeline-marker {% if order.status|lower == 'completed' %}completed{% endif %}"></div>
+                <div class="timeline-content">
+                    <div class="timeline-status">Delivered</div>
+                    <div class="timeline-description">{% if order.status|lower == 'completed' %}Your order has been delivered.{% else %}Ready for delivery.{% endif %}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESTIMATED DELIVERY -->
+        {% if order.status != 'COMPLETED' %}
+            <div class="delivery-info">
+                <div class="delivery-info-label">⏱️ Estimated Delivery Time:</div>
+                <div class="delivery-time">Within 30-45 minutes from order time</div>
+            </div>
+        {% else %}
+            <div class="delivery-info" style="background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%); border-left-color: #4caf50;">
+                <div class="delivery-info-label" style="color: #2e7d32;">✓ Order Delivered</div>
+                <div class="delivery-time" style="color: #2e7d32;">Thank you for your order!</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- ORDER DETAILS -->
+    <div class="order-details">
+        <div class="section-title">Order Details</div>
+        <div class="details-grid">
+            <div class="detail-card">
+                <div class="detail-label">👤 Customer Name</div>
+                <div class="detail-value">{{ order.customer_name }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">📍 Current Status</div>
+                <div class="detail-value" style="color: #ff6b6b;">{{ order.status|title }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">📅 Ordered Date</div>
+                <div class="detail-value">{{ order.created_at|date:"d M, Y" }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="detail-label">🕐 Order Time</div>
+                <div class="detail-value">{{ order.created_at|date:"h:i A" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDER ITEMS -->
+    <div class="items-section">
+        <div class="items-title">📦 Items in Your Order</div>
+        
+        {% for item in order_items %}
+            <div class="item-card">
+                <div style="display:flex;gap:12px;align-items:center">
+                    <div class="item-image">
+                        {% if item.food.food_img %}
+                            <img src="{{ item.food.food_img.url }}" alt="{{ item.food.name }}">
+                        {% else %}
+                            <img src="{% static 'images/defaultimg.png' %}" alt="{{ item.food.name }}">
+                        {% endif %}
+                    </div>
+                    <div>
+                        <div class="item-name">{{ item.food.name }}</div>
+                        <div class="item-qty">Quantity: <strong>{{ item.quantity }}</strong></div>
+                    </div>
+                </div>
+                <div class="item-price">₹{{ item.price|floatformat:2 }}</div>
+            </div>
+        {% endfor %}
+
+        <!-- TOTAL -->
+        <div class="total-section" style="margin-top: 24px;">
+            <div class="total-label">💰 Total Amount</div>
+            <div class="total-amount">₹{{ order.total_price|floatformat:2 }}</div>
+        </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="action-buttons">
+        <a href="{% url 'order_history' %}" class="btn btn-primary">
+            📋 Back to Order History
+        </a>
+        <a href="{% url 'allfoods' %}" class="btn btn-secondary">
+            🛒 Continue Shopping
+        </a>
+    </div>
+</div>
+
+{% endblock %}

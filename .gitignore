@@ -1,0 +1,33 @@
+# Environment variables — never push to GitHub
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Django
+db.sqlite3
+*.log
+media/
+
+# Virtual environment
+env/
+env1/
+venv/
+.venv/
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Django collected static files
+staticfiles/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

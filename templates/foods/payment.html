@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    /* Neutral minimal payment styles — compact and professional */
+    :root{--maxw:980px;--muted:#6b7280;--accent:#0ea5a4;--card-bg:#ffffff;--panel-border:#eef2f6}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;color:#0f1722;background:#fafbfc}
+    .payment-container{max-width:var(--maxw);margin:18px auto;padding:16px}
+    .payment-header{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f3f4f6}
+    .payment-header h1{font-size:1.05rem;font-weight:800}
+    .payment-header p{color:var(--muted);font-size:0.92rem;margin:0}
+
+    .payment-content{display:grid;grid-template-columns:1fr 340px;gap:18px;margin-top:14px;align-items:start}
+
+    /* Left column (methods) */
+    .payment-methods{background:var(--card-bg);border:1px solid var(--panel-border);border-radius:10px;padding:14px}
+    .section-title{font-weight:700;margin-bottom:10px;color:#0f1722}
+    .payment-option{display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;border:1px solid transparent;cursor:pointer}
+    .payment-option:hover{background:#fbfcfd}
+    .payment-option input[type=radio]{width:18px;height:18px}
+
+    /* Details panels */
+    .card-details,.upi-info,.wallet-info{display:none;margin-top:12px;padding:12px;border-radius:8px;border:1px solid #f3f6f9;background:#fff}
+    .active{display:block}
+
+    label{font-weight:600;color:#0f1722;font-size:0.92rem}
+    input[type=text],input[type=tel],select{width:100%;padding:10px;border:1px solid #e6eef3;border-radius:8px;background:#fbfcfd}
+    .form-row{margin-bottom:10px}
+    .two-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    /* Right column (summary) */
+    .order-summary{border:1px solid var(--panel-border);padding:14px;border-radius:10px;background:var(--card-bg)}
+    .summary-title{font-weight:800;margin-bottom:10px}
+    .order-item-summary{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #f2f6f8}
+    .order-item-summary:last-child{border-bottom:none}
+    .item-name-summary{font-weight:700;color:#0f1722}
+    .item-qty{color:var(--muted);font-size:0.92rem}
+    .item-price{font-weight:800;color:#0f1722}
+
+    .summary-row{display:flex;justify-content:space-between;padding:8px 0;color:var(--muted);font-size:0.95rem}
+    .summary-row.total{font-weight:800;color:#0f1722;border-top:1px solid #f3f6f8;padding-top:10px;margin-top:8px}
+
+    /* Actions */
+    .button-group{display:flex;gap:10px;margin-top:12px}
+    .btn-pay{flex:1;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:800}
+    .btn-cancel{padding:10px;border:1px solid #e6eef3;background:#fff;border-radius:8px;color:var(--muted);text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+
+    .security-badge{margin-top:12px;color:var(--muted);font-size:0.92rem}
+
+    @media(max-width:820px){.payment-content{grid-template-columns:1fr 300px}}
+    @media(max-width:720px){.payment-content{grid-template-columns:1fr}.order-summary{position:static}}
+</style>
+
+    <div class="payment-container">
+        <form id="paymentForm" method="POST" action="{% url 'process_payment' order.id %}">
+            {% csrf_token %}
+
+            <div class="payment-content">
+                <!-- Left: payment methods -->
+                <div class="payment-methods">
+                    <!-- CARD PAYMENT OPTION -->
+                    <div class="payment-option">
+                        <input type="radio" id="card" name="payment_method" value="CARD" checked>
+                        <label for="card">💳 Card (Visa, MasterCard)</label>
+                    </div>
+
+                    <!-- CARD DETAILS FORM (Hidden by default) -->
+                    <div class="card-details active" id="cardDetails">
+                        <div class="form-row">
+                            <label for="cardName">Cardholder Name</label>
+                            <input type="text" id="cardName" name="card_name" placeholder="John Doe" required>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="cardNumber">Card Number</label>
+                            <input type="text" id="cardNumber" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19" required>
+                        </div>
+
+                        <div class="form-row two-cols">
+                            <div>
+                                <label for="expiryDate">Expiry Date</label>
+                                <input type="text" id="expiryDate" name="expiry_date" placeholder="MM/YY" maxlength="5" required>
+                            </div>
+                            <div>
+                                <label for="cvv">CVV</label>
+                                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="3" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI -->
+                    <div class="payment-option">
+                        <input type="radio" id="upi" name="payment_method" value="UPI">
+                        <label for="upi">📱 UPI (Google Pay, PhonePe, Paytm)</label>
+                    </div>
+
+                    <div class="upi-info" id="upiInfo">
+                        <div class="info-text">
+                            <p>📲 Enter your UPI ID to complete the payment securely (only required for UPI).</p>
+                        </div>
+                        <div class="form-row" style="margin-top: 12px;">
+                            <label for="upiId">UPI ID</label>
+                            <input type="text" id="upiId" name="upi_id" placeholder="yourname@bank" />
+                        </div>
+                    </div>
+
+                    <!-- WALLET -->
+                    <div class="payment-option">
+                        <input type="radio" id="wallet" name="payment_method" value="WALLET">
+                        <label for="wallet">👛 Wallet</label>
+                    </div>
+
+                    <div class="wallet-info" id="walletInfo">
+                        <div class="form-row">
+                            <label for="walletProvider">Wallet Provider</label>
+                            <select id="walletProvider" name="wallet_provider">
+                                <option value="paytm">Paytm</option>
+                                <option value="phonepe">PhonePe</option>
+                                <option value="gpay">Google Pay</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label for="walletId">Wallet Mobile / ID</label>
+                            <input type="text" id="walletId" name="wallet_id" placeholder="Mobile or Wallet ID" />
+                        </div>
+                    </div>
+
+                    <!-- CASH ON DELIVERY -->
+                    <div class="payment-option">
+                        <input type="radio" id="cod" name="payment_method" value="COD">
+                        <label for="cod">🚚 Cash on Delivery</label>
+                    </div>
+
+                    <!-- SECURITY BADGE -->
+                    <div class="security-badge">
+                        <span class="security-icon">🔒</span>
+                        <span>Secure & Encrypted Payment</span>
+                    </div>
+                </div>
+
+                <!-- Right: Order summary -->
+                <div class="order-summary">
+                <div class="summary-title">Order Summary</div>
+
+                {% for item in order_items %}
+                    <div class="order-item-summary">
+                        <div class="item-info">
+                            <div class="item-name-summary">{{ item.food.name }}</div>
+                            <div class="item-qty">Qty: {{ item.quantity }}</div>
+                            {% if item.is_customized %}
+                                <div class="item-qty" style="color: #ff9800; font-weight: 600;">Customized</div>
+                            {% endif %}
+                        </div>
+                        <div class="item-price">₹{{ item.price|floatformat:2 }}</div>
+                    </div>
+                {% endfor %}
+
+                <div class="summary-divider"></div>
+
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>₹{{ order.total_price|floatformat:2 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Delivery Charges</span>
+                    <span>₹0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax & Fees</span>
+                    <span>₹0.00</span>
+                </div>
+
+                <div class="summary-row total">
+                    <span>Total Amount</span>
+                    <span>₹{{ order.total_price|floatformat:2 }}</span>
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="button-group">
+                    <button type="submit" class="btn-pay" id="payBtn">✓ Complete Payment</button>
+                    <a href="{% url 'order_confirmation' order.id %}" class="btn-cancel">Cancel</a>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    (function() {
+        // Unified handler to show/hide sections and manage required fields
+        function updatePaymentSections() {
+            const methodEl = document.querySelector('input[name="payment_method"]:checked');
+            const method = methodEl ? methodEl.value : null;
+
+            const cardDetails = document.getElementById('cardDetails');
+            const upiInfo = document.getElementById('upiInfo');
+            const walletInfo = document.getElementById('walletInfo');
+            const upiId = document.getElementById('upiId');
+            const walletId = document.getElementById('walletId');
+
+            // card inputs
+            const cardName = document.getElementById('cardName');
+            const cardNumber = document.getElementById('cardNumber');
+            const expiryDate = document.getElementById('expiryDate');
+            const cvv = document.getElementById('cvv');
+
+            const isCard = method === 'CARD';
+            const isUpi = method === 'UPI';
+            const isWallet = method === 'WALLET';
+
+            if (cardDetails) cardDetails.classList.toggle('active', isCard);
+            if (upiInfo) upiInfo.classList.toggle('active', isUpi);
+            if (walletInfo) walletInfo.classList.toggle('active', isWallet);
+
+            // toggle required/disabled so hidden fields don't block HTML5 validation
+            if (cardName) { cardName.required = isCard; cardName.disabled = !isCard; }
+            if (cardNumber) { cardNumber.required = isCard; cardNumber.disabled = !isCard; }
+            if (expiryDate) { expiryDate.required = isCard; expiryDate.disabled = !isCard; }
+            if (cvv) { cvv.required = isCard; cvv.disabled = !isCard; }
+
+            if (upiId) { upiId.required = isUpi; upiId.disabled = !isUpi; }
+            if (walletId) { walletId.required = isWallet; walletId.disabled = !isWallet; }
+        }
+
+        // Formatters
+        function formatCardNumber(e) {
+            let value = e.target.value.replace(/\D/g, '').slice(0,16);
+            let parts = [];
+            for (let i = 0; i < value.length; i += 4) parts.push(value.slice(i, i+4));
+            e.target.value = parts.join(' ');
+        }
+
+        function formatExpiry(e) {
+            let value = e.target.value.replace(/\D/g, '').slice(0,4);
+            if (value.length > 2) value = value.slice(0,2) + '/' + value.slice(2);
+            e.target.value = value;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // initial visibility
+            updatePaymentSections();
+
+            // add listeners to radios
+            document.querySelectorAll('input[name="payment_method"]').forEach(r => r.addEventListener('change', updatePaymentSections));
+
+            const cardNumberInput = document.getElementById('cardNumber');
+            const expiryInput = document.getElementById('expiryDate');
+            if (cardNumberInput) cardNumberInput.addEventListener('input', formatCardNumber);
+            if (expiryInput) expiryInput.addEventListener('input', formatExpiry);
+        });
+
+        // Form submit validation
+        const paymentForm = document.getElementById('paymentForm');
+        if (paymentForm) {
+            paymentForm.addEventListener('submit', function(e) {
+                const methodEl = document.querySelector('input[name="payment_method"]:checked');
+                const method = methodEl ? methodEl.value : null;
+
+                if (method === 'CARD') {
+                    const cardNumberEl = document.getElementById('cardNumber');
+                    const cvvEl = document.getElementById('cvv');
+                    const expiryEl = document.getElementById('expiryDate');
+                    const cardNameEl = document.getElementById('cardName');
+
+                    const cardNumber = cardNumberEl ? cardNumberEl.value.replace(/\s/g,'') : '';
+                    const cvv = cvvEl ? cvvEl.value.trim() : '';
+                    const expiry = expiryEl ? expiryEl.value.trim() : '';
+                    const cardName = cardNameEl ? cardNameEl.value.trim() : '';
+
+                    if (!cardName) { e.preventDefault(); alert('Enter cardholder name'); return false; }
+                    if (cardNumber.length !== 16) { e.preventDefault(); alert('Card number must be 16 digits'); return false; }
+                    if (cvv.length !== 3) { e.preventDefault(); alert('CVV must be 3 digits'); return false; }
+                    if (!/^[0-1][0-9]\/\d{2}$/.test(expiry)) { e.preventDefault(); alert('Expiry must be MM/YY'); return false; }
+                }
+
+                if (method === 'UPI') {
+                    const upiEl = document.getElementById('upiId');
+                    const upi = upiEl ? upiEl.value.trim() : '';
+                    if (!upi) { e.preventDefault(); alert('Enter your UPI ID'); return false; }
+                    if (!upi.includes('@')) { e.preventDefault(); alert('Invalid UPI ID'); return false; }
+                }
+
+                // disable button and show processing state
+                const payBtn = document.getElementById('payBtn');
+                if (payBtn) { payBtn.disabled = true; payBtn.textContent = '⏳ Processing...'; }
+
+                // Let the form submit to server; server will redirect to payment_success
+            });
+        }
+    })();
+</script>
+
+{% endblock %}

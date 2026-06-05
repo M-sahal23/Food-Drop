@@ -1,0 +1,984 @@
+# CHECKOUT & PAYMENT SYSTEM - COMPREHENSIVE DOCUMENTATION
+
+## 📋 TABLE OF CONTENTS
+1. System Architecture Overview
+2. Checkout Flow Explanation
+3. Payment Flow Explanation
+4. Order Tracking & History
+5. Database Models
+6. Views Functions
+7. API Routes & URLs
+8. Frontend Templates
+9. User Flow Diagrams
+10. Testing Guide
+11. Payment Integration Notes
+12. Future Enhancements
+
+---
+
+## 1. SYSTEM ARCHITECTURE OVERVIEW
+
+### High-Level Flow:
+```
+Cart Page → Order Confirmation → Payment Page → Payment Success
+    ↓              ↓                  ↓              ↓
+(User Review) (Order Created) (Process Payment) (Clear Cart)
+                                                  ↓
+                            Order History & Tracking Available
+```
+
+### Key Components:
+- **Cart Management**: Regular and customized items
+- **Order Creation**: Generates unique order ID
+- **Payment Processing**: Multiple payment methods
+- **Order Tracking**: Real-time status updates
+- **Order History**: View all past orders
+
+---
+
+## 2. CHECKOUT FLOW EXPLANATION
+
+### Step 1: Review Cart
+**File**: `templates/foods/cart.html`
+**Location**: Cart page with all items
+
+**Features**:
+- Display regular items with quantity controls
+- Display customized items with full customization details
+- Show real-time order summary with totals
+- "Proceed to Checkout" button triggers modal dialog
+
+**Code**:
+```html
+<button type="button" class="checkout-btn" data-toggle="modal" 
+        data-target="#checkoutModal">
+    Proceed to Checkout
+</button>
+```
+
+### Step 2: Checkout Modal
+**Functionality**:
+- Modal popup on cart page
+- Customer enters full name
+- Shows total amount
+- "Complete Order" button triggers `buy_now` view
+
+**Modal Content**:
+```html
+<div class="modal fade" id="checkoutModal">
+    <form method="POST" action="{% url 'buy_now' %}">
+        {% csrf_token %}
+        <input type="text" name="customer_name" required>
+        <button type="submit">Complete Order</button>
+    </form>
+</div>
+```
+
+### Step 3: Order Creation (buy_now view)
+**File**: `foods/views.py` - `buy_now()` function
+**Route**: `POST /foods/buy-now/`
+
+**Process**:
+1. Validate customer name
+2. Get all cart items (regular + customized)
+3. Calculate total price
+4. Create Order object with auto-generated order_id
+5. Create OrderItem entries for each cart item
+6. Clear cart (Cart.objects.all().delete())
+7. Redirect to order confirmation page
+
+**Key Code**:
+```python
+def buy_now(request):
+    if request.method == 'POST':
+        customer_name = request.POST.get('customer_name', '').strip()
+        
+        # Get cart items
+        regular_cart_items = list(Cart.objects.all())
+        customized_cart_items = list(CustomizedCart.objects.all())
+        
+        # Calculate total
+        grand_total = sum(...) + sum(...)
+        
+        # Create Order
+        order = Order.objects.create(
+            customer_name=customer_name,
+            total_price=grand_total,
+            status='PENDING'
+        )
+        
+        # Create OrderItems from cart
+        for item in regular_cart_items:
+            OrderItem.objects.create(
+                order=order,
+                food=item.food,
+                quantity=item.quantity,
+                price=item.total_price,
+                is_customized=False
+            )
+        
+        # Clear cart
+        Cart.objects.all().delete()
+        CustomizedCart.objects.all().delete()
+        
+        return redirect('order_confirmation', order_id=order.id)
+```
+
+### Step 4: Order Confirmation Page
+**File**: `templates/foods/order_confirmation.html`
+**Route**: `GET /foods/order-confirmation/<order_id>/`
+**View**: `order_confirmation()` function
+
+**Features**:
+- Display order ID (unique identifier)
+- Show customer name
+- Order status (PENDING)
+- Order date and time
+- List of all ordered items with details
+- Total amount display
+- Action buttons:
+  - **Proceed to Payment** → Redirects to payment page
+  - **View Order Details** → Shows order status
+  - **Continue Shopping** → Back to food items
+
+**Important**: Payment button NOT shown in this version - added in update!
+
+---
+
+## 3. PAYMENT FLOW EXPLANATION
+
+### Step 1: Payment Page
+**File**: `templates/foods/payment.html`
+**Route**: `GET /foods/payment/<order_id>/`
+**View**: `payment_page()` function
+
+**Features**:
+- Display order ID and details
+- Show order summary with items
+- Payment method selection:
+  
+#### Available Payment Methods:
+1. **Credit/Debit Card**
+   - Card holder name
+   - Card number (16 digits)
+   - Expiry date (MM/YY)
+   - CVV (3 digits)
+
+2. **UPI** (Google Pay, PhonePe, Paytm)
+   - UPI ID input
+   - Secure transaction info
+
+3. **Net Banking**
+   - Select bank
+   - Account verification
+
+4. **Digital Wallet**
+   - Balance display
+   - Supported wallets info
+
+5. **Cash on Delivery (COD)**
+   - No payment needed upfront
+   - Pay at delivery
+
+**Security Features**:
+- Input validation (card number format, expiry format)
+- 🔒 Security badge display
+- Encrypted payment note
+- Client-side validation
+
+**JavaScript Features**:
+```javascript
+// Format card number with spaces
+document.getElementById('cardNumber').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formattedValue = '';
+    for (let i = 0; i < value.length; i++) {
+        if (i > 0 && i % 4 === 0) {
+            formattedValue += ' ';
+        }
+        formattedValue += value[i];
+    }
+    e.target.value = formattedValue;
+});
+
+// Format expiry date
+document.getElementById('expiryDate').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+    }
+    e.target.value = value;
+});
+```
+
+### Step 2: Payment Processing
+**File**: `foods/views.py` - `process_payment()` function
+**Route**: `POST /foods/process-payment/<order_id>/`
+
+**Process**:
+1. Receive form data from payment page
+2. Get payment method from request
+3. Validate order exists
+4. In production: Call actual payment gateway (Razorpay, Stripe, etc.)
+5. Update order status to 'PROCESSING'
+6. Redirect to payment success page
+
+**Current Implementation** (Simulated):
+```python
+def process_payment(request, order_id):
+    if request.method == 'POST':
+        try:
+            order = Order.objects.get(id=order_id)
+            payment_method = request.POST.get('payment_method', 'CARD')
+            
+            # In production, call actual payment gateway here
+            # e.g., razorpay_client.payment.create({...})
+            
+            # Update order status
+            order.status = 'PROCESSING'
+            order.save()
+            
+            # Redirect to success page
+            return redirect('payment_success', order_id=order.id)
+            
+        except Order.DoesNotExist:
+            return redirect('cart')
+```
+
+**Payment Gateway Integration** (For Production):
+```python
+# Example: Razorpay Integration
+import razorpay
+
+def process_payment(request, order_id):
+    order = Order.objects.get(id=order_id)
+    
+    client = razorpay.Client(auth=(RAZORPAY_KEY, RAZORPAY_SECRET))
+    
+    payment = client.payment.create({
+        'amount': int(order.total_price * 100),
+        'currency': 'INR',
+        'receipt': order.order_id,
+        'description': f'Order {order.order_id}'
+    })
+    
+    if payment['status'] == 'created':
+        order.status = 'PROCESSING'
+        order.save()
+        return redirect('payment_success', order_id=order.id)
+```
+
+### Step 3: Payment Success Page
+**File**: `templates/foods/payment_success.html`
+**Route**: `GET /foods/payment-success/<order_id>/`
+**View**: `payment_success()` function
+
+**Features**:
+- Animated success checkmark
+- Confirmation message
+- Order ID display
+- Customer name
+- Order date and status
+- Items summary (scrollable)
+- Total amount paid (highlighted)
+- **Cart automatically cleared** (verified)
+
+**Action Buttons**:
+- 📍 Track Your Order
+- 📋 View Order History
+- 🛒 Continue Shopping
+
+**Code (Cart Clearing)**:
+```python
+def payment_success(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        order_items = OrderItem.objects.filter(order=order)
+        
+        # Double-check: Clear cart
+        Cart.objects.all().delete()
+        CustomizedCart.objects.all().delete()
+        
+        context = {
+            'order': order,
+            'order_items': order_items,
+        }
+        return render(request, 'foods/payment_success.html', context)
+    except Order.DoesNotExist:
+        return redirect('cart')
+```
+
+---
+
+## 4. ORDER TRACKING & HISTORY
+
+### Order History Page
+**File**: `templates/foods/order_history.html`
+**Route**: `GET /foods/order-history/`
+**View**: `order_history()` function
+
+**Features**:
+- Display all past orders
+- Statistics: Total orders, Total spent
+- Filter by status (All, Pending, Processing, Completed, Cancelled)
+- Order cards showing:
+  - Order ID
+  - Customer name
+  - Order date and time
+  - Order status badge (color-coded)
+  - Items count
+  - Items preview (first 3 items + count of more)
+  - Total amount
+
+**Filter Functionality**:
+```javascript
+function filterOrders(status) {
+    const cards = document.querySelectorAll('.order-card');
+    cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+```
+
+**Action Buttons** (per order):
+- 📍 Track Order
+- 📋 View Details
+
+### Order Tracking Page
+**File**: `templates/foods/order_tracking.html`
+**Route**: `GET /foods/order-tracking/<order_id>/`
+**View**: `order_tracking()` function
+
+**Features**:
+- Order ID display
+- Timeline visualization with 3 stages:
+  1. ✓ Order Placed (Always completed)
+  2. ⚙️ Processing (Completed if status >= PROCESSING)
+  3. 📦 Delivered (Completed only if status == COMPLETED)
+- Order details grid
+- Items in order with customization badges
+- Total amount
+- Estimated delivery time (30-45 minutes)
+- Current status indicator
+
+**Timeline Implementation**:
+```html
+<div class="timeline-item {% if order.status == 'PROCESSING' or order.status == 'COMPLETED' %}completed{% else %}pending{% endif %}">
+    <div class="timeline-circle">
+        {% if order.status == 'PROCESSING' or order.status == 'COMPLETED' %}
+            ✓
+        {% else %}
+            ⏳
+        {% endif %}
+    </div>
+    <!-- Timeline content -->
+</div>
+```
+
+---
+
+## 5. DATABASE MODELS
+
+### Order Model
+**File**: `foods/models.py`
+
+```python
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('PROCESSING', 'Processing'),
+        ('COMPLETED', 'Completed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+    
+    order_id = models.CharField(max_length=100, unique=True, editable=False)
+    customer_name = models.CharField(max_length=100)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.order_id:
+            self.order_id = f"ORD_{self.created_at.strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+```
+
+**Fields Explanation**:
+- `order_id`: Unique identifier (auto-generated, format: ORD_TIMESTAMP_UNIQUEID)
+- `customer_name`: Customer's full name
+- `total_price`: Total order amount (Decimal)
+- `status`: Order status (4 stages)
+- `created_at`: Order creation timestamp
+- `updated_at`: Last update timestamp
+
+### OrderItem Model
+**File**: `foods/models.py`
+
+```python
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    food = models.ForeignKey('FoodItems', on_delete=models.SET_NULL, null=True)
+    quantity = models.IntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    is_customized = models.BooleanField(default=False)
+    customization_details = models.TextField(blank=True)  # JSON or text details
+```
+
+**Fields Explanation**:
+- `order`: Foreign key to Order
+- `food`: Reference to food item
+- `quantity`: Number of items ordered
+- `price`: Price at time of order (frozen)
+- `is_customized`: Boolean flag for customized items
+- `customization_details`: JSON string storing customization info
+
+---
+
+## 6. VIEWS FUNCTIONS
+
+### Complete List of New/Updated Views:
+
+```python
+# In foods/views.py
+
+# 1. buy_now(request)
+#    - Creates order from cart items
+#    - Clears cart
+#    - Redirects to order confirmation
+
+# 2. order_confirmation(request, order_id)
+#    - Shows confirmation page with order details
+#    - Displays items and total
+
+# 3. payment_page(request, order_id)
+#    - Shows payment method selection
+#    - Displays payment form
+
+# 4. process_payment(request, order_id)
+#    - Processes payment (currently simulated)
+#    - Updates order status to PROCESSING
+#    - Redirects to success page
+
+# 5. payment_success(request, order_id)
+#    - Shows success page
+#    - Clears cart (double-check)
+#    - Displays order confirmation
+
+# 6. order_history(request)
+#    - Shows all past orders
+#    - Displays statistics
+
+# 7. order_tracking(request, order_id)
+#    - Shows order status timeline
+#    - Displays item details
+#    - Shows estimated delivery time
+
+# 8. order_status(request, order_id)
+#    - Shows order status page
+#    - Displays order details
+```
+
+---
+
+## 7. API ROUTES & URLS
+
+**File**: `foods/urls.py`
+
+```python
+# Checkout & Payment Routes
+path('buy-now/', views.buy_now, name='buy_now'),
+path('order-confirmation/<int:order_id>/', views.order_confirmation, name='order_confirmation'),
+path('payment/<int:order_id>/', views.payment_page, name='payment_page'),
+path('process-payment/<int:order_id>/', views.process_payment, name='process_payment'),
+path('payment-success/<int:order_id>/', views.payment_success, name='payment_success'),
+
+# Order Tracking & History Routes
+path('order-status/<str:order_id>/', views.order_status, name='order_status'),
+path('order-history/', views.order_history, name='order_history'),
+path('order-tracking/<str:order_id>/', views.order_tracking, name='order_tracking'),
+```
+
+**Route Summary Table**:
+
+| Route | Method | View | Purpose |
+|-------|--------|------|---------|
+| `/foods/buy-now/` | POST | buy_now | Create order from cart |
+| `/foods/order-confirmation/<id>/` | GET | order_confirmation | Show order confirmation |
+| `/foods/payment/<id>/` | GET | payment_page | Show payment form |
+| `/foods/process-payment/<id>/` | POST | process_payment | Process payment |
+| `/foods/payment-success/<id>/` | GET | payment_success | Show success page |
+| `/foods/order-history/` | GET | order_history | Show all orders |
+| `/foods/order-tracking/<id>/` | GET | order_tracking | Show order tracking |
+| `/foods/order-status/<id>/` | GET | order_status | Show order status |
+
+---
+
+## 8. FRONTEND TEMPLATES
+
+### File List:
+
+1. **cart.html** (Updated)
+   - Added "Proceed to Checkout" button
+   - Checkout modal with customer name
+
+2. **order_confirmation.html** (Updated)
+   - Added "Proceed to Payment" button
+   - Shows order details before payment
+
+3. **payment.html** (New)
+   - Payment method selection
+   - Card form with validation
+   - UPI/Wallet/Net Banking options
+   - Order summary sidebar
+
+4. **payment_success.html** (New)
+   - Success confirmation with animation
+   - Order details display
+   - Order items summary
+   - Navigation to tracking/history
+
+5. **order_history.html** (New)
+   - All past orders list
+   - Filter by status
+   - Order statistics
+   - Quick actions
+
+6. **order_tracking.html** (New)
+   - Status timeline visualization
+   - Order details grid
+   - Items display
+   - Estimated delivery time
+
+---
+
+## 9. USER FLOW DIAGRAMS
+
+### Complete Checkout & Payment Flow:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    START: SHOPPING CART PAGE                         │
+│                      [Regular + Customized Items]                    │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              CLICK "PROCEED TO CHECKOUT" BUTTON                      │
+│           [Modal opens for customer name entry]                      │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CLICK "COMPLETE ORDER"                            │
+│                  [POST to /foods/buy-now/]                           │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                  BUY_NOW VIEW PROCESSING                             │
+│  • Get all cart items (regular + customized)                        │
+│  • Calculate total price                                            │
+│  • Create Order object (auto-generate order_id)                     │
+│  • Create OrderItem for each item                                   │
+│  • Clear Cart & CustomizedCart                                      │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│           ORDER CONFIRMATION PAGE (/order-confirmation/)            │
+│     [Order ID, Customer name, Items, Total, Status: PENDING]        │
+│                  [3 Action Buttons]                                  │
+│         ① Proceed to Payment  ② View Details  ③ Continue Shop      │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+              [Click Payment Button]
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│              PAYMENT PAGE (/payment/<order_id>/)                    │
+│           [Payment Method Selection & Form]                         │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │ Payment Methods:                                            │  │
+│  │ ○ Credit/Debit Card [Form: Card# Expiry CVV Name]         │  │
+│  │ ○ UPI [Form: UPI ID]                                       │  │
+│  │ ○ Net Banking                                              │  │
+│  │ ○ Digital Wallet                                           │  │
+│  │ ○ Cash on Delivery                                         │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│  [Sidebar: Order Summary with Items & Total]                       │
+│  [Buttons: Complete Payment | Cancel]                              │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+          [Click "Complete Payment"]
+          [POST to /process-payment/]
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│            PROCESS_PAYMENT VIEW PROCESSING                           │
+│  • Get order from database                                         │
+│  • In production: Call payment gateway (Razorpay/Stripe)           │
+│  • Update order.status = 'PROCESSING'                              │
+│  • Save order                                                       │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│           PAYMENT SUCCESS PAGE (/payment-success/)                  │
+│                                                                     │
+│              🎉 PAYMENT SUCCESSFUL! 🎉                             │
+│                                                                     │
+│  • Animated checkmark                                              │
+│  • Order ID display                                                │
+│  • Order details (customer, date, status: PROCESSING)              │
+│  • Items summary (scrollable)                                      │
+│  • Total amount paid (₹XXX)                                        │
+│  • Thank you message                                               │
+│  • Cart CLEARED automatically                                      │
+│                                                                     │
+│  [3 Action Buttons]                                                │
+│  ① Track Your Order  ② View Order History  ③ Continue Shopping    │
+└────────────────────┬──────────────────────────────────────────────────┘
+                     │
+        ┌────────────┼────────────┐
+        │            │            │
+        ▼            ▼            ▼
+    [Track]    [History]     [Shop]
+        │            │            │
+        ▼            ▼            ▼
+┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+│Order Tracking│ │Order History │ │Cart Page     │
+│Timeline+Detl│ │All Orders    │ │(Empty)       │
+└──────────────┘ └──────────────┘ └──────────────┘
+```
+
+### Order Tracking Timeline:
+
+```
+ORDER PLACED (✓) → PROCESSING (⚙️) → DELIVERED (📦)
+   Timestamp        Preparation        Completed
+   (Completed)      (In Progress)      (Pending)
+                                       
+                    [Estimated Time: 30-45 min]
+```
+
+---
+
+## 10. TESTING GUIDE
+
+### Unit Tests:
+
+```python
+# tests.py example
+
+from django.test import TestCase, Client
+from foods.models import FoodItems, Cart, Order, OrderItem
+
+class CheckoutPaymentTestCase(TestCase):
+    
+    def setUp(self):
+        self.client = Client()
+        self.food = FoodItems.objects.create(
+            name='Pizza',
+            price=250,
+            rating=5,
+            desc='Delicious pizza'
+        )
+    
+    def test_buy_now_creates_order(self):
+        # Create cart item
+        cart = Cart.objects.create(
+            food=self.food,
+            quantity=2,
+            total_price=500
+        )
+        
+        # Post to buy_now
+        response = self.client.post('/foods/buy-now/', {
+            'customer_name': 'John Doe'
+        })
+        
+        # Check order created
+        self.assertEqual(Order.objects.count(), 1)
+        order = Order.objects.first()
+        self.assertEqual(order.customer_name, 'John Doe')
+        self.assertEqual(order.total_price, 500)
+        self.assertEqual(order.status, 'PENDING')
+        
+        # Check cart cleared
+        self.assertEqual(Cart.objects.count(), 0)
+        
+        # Check redirect
+        self.assertRedirects(response, f'/foods/order-confirmation/{order.id}/')
+    
+    def test_payment_page_loads(self):
+        order = Order.objects.create(
+            customer_name='John Doe',
+            total_price=250,
+            status='PENDING'
+        )
+        
+        response = self.client.get(f'/foods/payment/{order.id}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('order', response.context)
+    
+    def test_process_payment_updates_status(self):
+        order = Order.objects.create(
+            customer_name='John Doe',
+            total_price=250,
+            status='PENDING'
+        )
+        
+        response = self.client.post(f'/foods/process-payment/{order.id}/', {
+            'payment_method': 'CARD'
+        })
+        
+        order.refresh_from_db()
+        self.assertEqual(order.status, 'PROCESSING')
+```
+
+### Manual Testing Checklist:
+
+- [ ] Add item to cart
+- [ ] Add customized item to cart
+- [ ] Go to cart page
+- [ ] Click "Proceed to Checkout"
+- [ ] Enter customer name in modal
+- [ ] Click "Complete Order"
+- [ ] Verify order created with unique order ID
+- [ ] Verify cart is empty
+- [ ] Check order confirmation page loads
+- [ ] Verify all order details displayed
+- [ ] Click "Proceed to Payment"
+- [ ] Select each payment method
+- [ ] Verify form fields appear/disappear
+- [ ] Test card input formatting
+- [ ] Test expiry date formatting
+- [ ] Click "Complete Payment"
+- [ ] Verify payment success page
+- [ ] Verify order status = PROCESSING
+- [ ] Click "Track Your Order"
+- [ ] Verify timeline displays correctly
+- [ ] Click "Order History"
+- [ ] Verify all orders listed
+- [ ] Test filter by status
+
+---
+
+## 11. PAYMENT INTEGRATION NOTES
+
+### Razorpay Integration (Example):
+
+**Installation**:
+```bash
+pip install razorpay
+```
+
+**Settings**:
+```python
+# settings.py
+RAZORPAY_KEY = 'your_key_id'
+RAZORPAY_SECRET = 'your_secret_key'
+```
+
+**Implementation**:
+```python
+import razorpay
+from django.conf import settings
+
+def process_payment(request, order_id):
+    order = Order.objects.get(id=order_id)
+    
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY, settings.RAZORPAY_SECRET)
+    )
+    
+    payment_data = {
+        'amount': int(order.total_price * 100),  # In paise
+        'currency': 'INR',
+        'receipt': order.order_id,
+        'description': f'Order {order.order_id}',
+        'notes': {
+            'customer_name': order.customer_name
+        }
+    }
+    
+    payment = client.payment.create(data=payment_data)
+    
+    # Save payment ID to order or separate Payment model
+    # Then redirect to Razorpay checkout
+    
+    return render(request, 'razorpay_checkout.html', {
+        'order': order,
+        'payment_id': payment['id']
+    })
+```
+
+### Stripe Integration (Alternative):
+
+**Installation**:
+```bash
+pip install stripe
+```
+
+**Implementation**:
+```python
+import stripe
+from django.conf import settings
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+def process_payment(request, order_id):
+    order = Order.objects.get(id=order_id)
+    
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        line_items=[{
+            'price_data': {
+                'currency': 'inr',
+                'product_data': {
+                    'name': order.order_id,
+                },
+                'unit_amount': int(order.total_price * 100),
+            },
+            'quantity': 1,
+        }],
+        mode='payment',
+        success_url=request.build_absolute_uri(
+            reverse('payment_success', args=[order.id])
+        ),
+        cancel_url=request.build_absolute_uri(
+            reverse('payment_page', args=[order.id])
+        ),
+    )
+    
+    return redirect(session.url)
+```
+
+---
+
+## 12. FUTURE ENHANCEMENTS
+
+### Planned Features:
+
+1. **User Authentication Integration**
+   - Save orders per user (not global)
+   - User profile with order history
+   - Wishlist integration
+
+2. **Advanced Payment Features**
+   - Multiple payment gateway support
+   - Wallet system for users
+   - Coupon/Discount codes
+   - Tax calculation
+
+3. **Admin Dashboard**
+   - Order management interface
+   - Status update by admin
+   - Revenue reports
+   - Customer management
+
+4. **Notification System**
+   - SMS notifications for order status
+   - Email confirmations
+   - Push notifications
+   - WhatsApp integration
+
+5. **Delivery Tracking**
+   - Real-time delivery partner location
+   - Estimated delivery time (dynamic)
+   - Delivery partner contact
+   - Rating system
+
+6. **Refund & Return**
+   - Refund processing
+   - Return request system
+   - Wallet credit on refund
+
+7. **Analytics**
+   - Order statistics
+   - Popular items tracking
+   - Customer behavior analysis
+   - Revenue tracking
+
+8. **Mobile App**
+   - Android/iOS app
+   - Push notifications
+   - In-app payments
+   - Offline support
+
+9. **Inventory Management**
+   - Real-time stock tracking
+   - Stock alerts
+   - Pre-order system
+
+10. **Customer Support**
+    - Live chat support
+    - FAQ section
+    - Complaint handling
+    - Rating & reviews
+
+---
+
+## QUICK REFERENCE
+
+### Key Models:
+- **Order**: Main order record with ID, customer name, total, status
+- **OrderItem**: Individual items in an order with customization details
+
+### Key Views:
+- `buy_now`: Create order from cart
+- `payment_page`: Show payment form
+- `process_payment`: Handle payment processing
+- `payment_success`: Confirm successful payment
+- `order_tracking`: Show real-time status
+- `order_history`: Show all past orders
+
+### Key Routes:
+- POST `/foods/buy-now/` → Create order
+- GET `/foods/payment/<id>/` → Payment form
+- POST `/foods/process-payment/<id>/` → Process payment
+- GET `/foods/payment-success/<id>/` → Success page
+- GET `/foods/order-tracking/<id>/` → Tracking page
+- GET `/foods/order-history/` → All orders
+
+### Status Values:
+- `PENDING`: Order created, waiting for payment
+- `PROCESSING`: Payment successful, order being prepared
+- `COMPLETED`: Order delivered
+- `CANCELLED`: Order cancelled
+
+---
+
+## SUPPORT & TROUBLESHOOTING
+
+### Common Issues:
+
+**Q: Order ID not generating**
+A: Check UUID import in models.py, ensure save() method called
+
+**Q: Cart not clearing after payment**
+A: Verify payment_success view calls Cart.objects.all().delete()
+
+**Q: Payment page shows empty**
+A: Check order_id exists in database, verify URL parameters
+
+**Q: Timeline not showing correctly**
+A: Verify order.status values match STATUS_CHOICES
+
+---
+
+## LAST UPDATED
+
+**Date**: January 2026
+**Version**: 3.1
+**Status**: ✅ Complete
+
+---
+

@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  .cd-root    { max-width:900px; margin:32px auto; padding:0 16px 60px; }
+  .back-row   { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
+  .back-btn   { display:inline-flex; align-items:center; gap:6px; padding:7px 16px;
+                border:1.5px solid var(--border-color); border-radius:50px;
+                font-size:.82rem; font-weight:600; color:var(--text-primary);
+                text-decoration:none; transition:all .15s; }
+  .back-btn:hover { border-color:#e63946; color:#e63946; }
+  .page-title { font-size:1.15rem; font-weight:700; color:var(--text-primary); margin:0; }
+
+  /* Profile banner */
+  .profile-banner {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: #e63946; color: #fff;
+    display: flex; align-items:center; justify-content:center;
+    font-size:1.6rem; font-weight:700; flex-shrink:0;
+  }
+  .profile-name  { font-size:1.1rem; font-weight:700; color:var(--text-primary); }
+  .profile-uname { font-size:.875rem; color:var(--text-secondary); margin-top:2px; }
+  .profile-email { font-size:.82rem; color:var(--text-secondary); margin-top:4px; }
+
+  /* Stat pills in banner */
+  .stat-pills { display:flex; gap:12px; margin-left:auto; flex-wrap:wrap; }
+  .stat-pill  {
+    text-align:center;
+    background:var(--bg-secondary);
+    border:1px solid var(--border-color);
+    border-radius:12px;
+    padding:10px 20px;
+    min-width:100px;
+  }
+  .stat-pill .sv { font-size:1.3rem; font-weight:800; color:var(--text-primary); }
+  .stat-pill .sl { font-size:.72rem; color:var(--text-secondary); margin-top:2px;
+                   text-transform:uppercase; letter-spacing:.4px; }
+
+  /* Cards */
+  .d-card {
+    background:var(--bg-card);
+    border:1px solid var(--border-color);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .d-card-head {
+    padding:14px 20px;
+    border-bottom:1px solid var(--border-color);
+    display:flex; align-items:center; gap:10px;
+  }
+  .d-card-head h2 {
+    font-size:.82rem; font-weight:700; text-transform:uppercase;
+    letter-spacing:.6px; color:var(--text-secondary); margin:0;
+  }
+  .d-card-head i { font-size:1rem; color:#e63946; }
+
+  .info-row {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:11px 20px; border-bottom:1px solid var(--border-color);
+    font-size:.875rem; gap:16px;
+  }
+  .info-row:last-child { border-bottom:none; }
+  .info-key { color:var(--text-secondary); }
+  .info-val { font-weight:600; color:var(--text-primary); }
+
+  /* Orders table */
+  .ord-table { width:100%; border-collapse:collapse; font-size:.875rem; }
+  .ord-table th {
+    padding:10px 16px; text-align:left; font-size:.7rem;
+    text-transform:uppercase; letter-spacing:.6px; font-weight:700;
+    color:var(--text-secondary); background:var(--bg-secondary);
+    border-bottom:1px solid var(--border-color); white-space:nowrap;
+  }
+  .ord-table td {
+    padding:12px 16px; border-bottom:1px solid var(--border-color);
+    color:var(--text-primary); vertical-align:middle;
+  }
+  .ord-table tr:last-child td { border-bottom:none; }
+  .ord-table tr:hover td { background:rgba(230,57,70,.03); }
+
+  .sbadge { font-size:.7rem; font-weight:700; padding:3px 10px;
+            border-radius:20px; text-transform:uppercase; letter-spacing:.3px; }
+  .sbadge-PENDING    { background:#fff8e1; color:#7a5c00; }
+  .sbadge-PROCESSING { background:#e3f2fd; color:#0d47a1; }
+  .sbadge-COMPLETED  { background:#e8f5e9; color:#1b5e20; }
+  .sbadge-CANCELLED  { background:#ffebee; color:#b71c1c; }
+  [data-theme="dark"] .sbadge-PENDING    { background:#3d2e00; color:#ffd54f; }
+  [data-theme="dark"] .sbadge-PROCESSING { background:#0d2137; color:#90caf9; }
+  [data-theme="dark"] .sbadge-COMPLETED  { background:#0d2e10; color:#a5d6a7; }
+  [data-theme="dark"] .sbadge-CANCELLED  { background:#2e0d0d; color:#ef9a9a; }
+
+  .btn-view {
+    display:inline-block; padding:5px 14px;
+    border:1.5px solid var(--border-color); border-radius:20px;
+    font-size:.78rem; font-weight:600; color:var(--text-primary);
+    text-decoration:none; transition:all .15s; white-space:nowrap;
+  }
+  .btn-view:hover { border-color:#e63946; color:#e63946; background:rgba(230,57,70,.05); }
+</style>
+
+<div class="cd-root">
+
+  <div class="back-row">
+    <a href="{% url 'customer_list' %}" class="back-btn">
+      <i class="bi bi-arrow-left"></i> Customers
+    </a>
+    <h1 class="page-title">Customer Detail</h1>
+  </div>
+
+  <!-- Profile banner -->
+  <div class="profile-banner">
+    <div class="profile-avatar">{{ customer.username|first|upper }}</div>
+    <div>
+      <div class="profile-name">
+        {{ customer.get_full_name|default:customer.username }}
+      </div>
+      <div class="profile-uname">@{{ customer.username }}</div>
+      <div class="profile-email">
+        <i class="bi bi-envelope" style="font-size:12px;"></i>
+        {{ customer.email|default:"No email on file" }}
+      </div>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill">
+        <div class="sv">{{ total_orders }}</div>
+        <div class="sl">Orders</div>
+      </div>
+      <div class="stat-pill">
+        <div class="sv" style="color:#2ecc71;font-size:1.1rem;">₹{{ total_spent }}</div>
+        <div class="sl">Total Spent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account info -->
+  <div class="d-card">
+    <div class="d-card-head">
+      <i class="bi bi-info-circle"></i>
+      <h2>Account Information</h2>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Username</span>
+      <span class="info-val">{{ customer.username }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Full Name</span>
+      <span class="info-val">{{ customer.get_full_name|default:"—" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Email Address</span>
+      <span class="info-val">{{ customer.email|default:"—" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Joined On</span>
+      <span class="info-val">{{ customer.date_joined|date:"d M Y, H:i" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Last Login</span>
+      <span class="info-val">
+        {% if customer.last_login %}
+          {{ customer.last_login|date:"d M Y, H:i" }}
+        {% else %}
+          Never logged in
+        {% endif %}
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-key">Account Status</span>
+      <span class="info-val">
+        {% if customer.is_active %}
+          <span style="color:#2ecc71;font-weight:700;">● Active</span>
+        {% else %}
+          <span style="color:#ef4444;font-weight:700;">● Inactive</span>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Order history -->
+  <div class="d-card">
+    <div class="d-card-head">
+      <i class="bi bi-receipt"></i>
+      <h2>Order History ({{ total_orders }})</h2>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="ord-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Items</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td>
+              <span style="font-family:monospace;font-size:.78rem;color:var(--text-secondary);">
+                {{ order.order_id }}
+              </span>
+            </td>
+            <td style="color:var(--text-secondary);">
+              {{ order.items.count }} item{{ order.items.count|pluralize }}
+            </td>
+            <td>
+              <strong style="color:#2ecc71;">₹{{ order.total_price }}</strong>
+            </td>
+            <td>
+              <span class="sbadge sbadge-{{ order.status }}">{{ order.status }}</span>
+            </td>
+            <td style="color:var(--text-secondary);font-size:.82rem;white-space:nowrap;">
+              {{ order.created_at|date:"d M Y" }}
+            </td>
+            <td>
+              <a href="{% url 'order_detail_view' order.id %}" class="btn-view">
+                View →
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" style="text-align:center;padding:36px;color:var(--text-secondary);">
+              This customer has no orders yet.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

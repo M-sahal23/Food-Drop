@@ -1,0 +1,587 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                 CATEGORY-BASED CUSTOMIZATION SYSTEM                           ║
+║                          Implementation Guide                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TABLE OF CONTENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Overview
+2. Category Mapping & Customization Rules
+3. Implementation Details
+4. User Experience Flow
+5. Code References
+6. Testing Scenarios
+7. Future Enhancements
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The Category-Based Customization System intelligently shows/hides customization 
+options based on the food item's category. This provides:
+
+✓ Cleaner, less overwhelming UI for users
+✓ Context-relevant options (e.g., no "size" for a single-serving item)
+✓ Improved user experience by reducing irrelevant choices
+✓ Flexible system that adapts to new food categories
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. CATEGORY MAPPING & CUSTOMIZATION RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Each food category has specific customization options available:
+
+┌────────────────┬──────────┬──────────┬──────────┬────────────┐
+│   CATEGORY     │   SIZE   │   BASE   │  SAUCE   │  TOPPINGS  │
+├────────────────┼──────────┼──────────┼──────────┼────────────┤
+│ PIZZA          │    ✓     │    ✓     │    ✓     │     ✓      │
+│ BURGER         │    ✗     │    ✓     │    ✓     │     ✓      │
+│ BIRIYANI       │    ✗     │    ✗     │    ✗     │     ✓      │
+│ FRENCH FRIES   │    ✓     │    ✗     │    ✓     │     ✓      │
+│ DESSERTS       │    ✗     │    ✗     │    ✗     │     ✓      │
+│ BEVERAGES      │    ✓     │    ✗     │    ✗     │     ✗      │
+└────────────────┴──────────┴──────────┴──────────┴────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2.1 DETAILED CATEGORY RULES & RATIONALE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+───────────────────────────────────────────────────────────────────────────────
+PIZZA
+───────────────────────────────────────────────────────────────────────────────
+Available Options: SIZE ✓ | BASE ✓ | SAUCE ✓ | TOPPINGS ✓
+
+Rationale:
+  • Pizzas come in multiple sizes (Regular, Medium, Large, Extra Large)
+  • Multiple base options (Thin Crust, Pan, Stuffed Crust, etc.)
+  • Various sauce choices (Tomato, White, BBQ, etc.)
+  • Multiple toppings for personalization
+
+Example Customization:
+  Pizza Margherita + Large Size + Stuffed Crust + Tomato Sauce + Cheese + Mushrooms
+
+───────────────────────────────────────────────────────────────────────────────
+BURGER
+───────────────────────────────────────────────────────────────────────────────
+Available Options: BASE ✓ | SAUCE ✓ | TOPPINGS ✓ | SIZE ✗
+
+Rationale:
+  • Burgers are typically single-size items (no size variation)
+  • Customers can choose bun type (base): Regular, Toasted, Multigrain, etc.
+  • Sauce customization: Mayo, Mustard, BBQ, Sriracha, etc.
+  • Toppings: Lettuce, Tomato, Onions, Cheese, Bacon, etc.
+
+Example Customization:
+  Cheese Burger + Toasted Bun + Mayo Sauce + Lettuce + Tomato
+
+Why No Size?
+  • Burgers are portioned items; size variation doesn't apply
+  • Avoids confusing users with irrelevant "size" options
+
+───────────────────────────────────────────────────────────────────────────────
+BIRIYANI
+───────────────────────────────────────────────────────────────────────────────
+Available Options: TOPPINGS ✓ ONLY | BASE ✗ | SAUCE ✗ | SIZE ✗
+
+Rationale:
+  • Biryanis are complete, pre-made dishes with set portions
+  • No base/size/sauce options - served as-is
+  • Only toppings allowed for add-ons: Boiled Eggs, Raita, Pickles, etc.
+
+Example Customization:
+  Chicken Biryani + Extra Boiled Eggs + Raita
+
+Why Minimal Options?
+  • Biryani is a complex dish with balanced ingredients
+  • Additional customization would disrupt the traditional recipe
+
+───────────────────────────────────────────────────────────────────────────────
+FRENCH FRIES
+───────────────────────────────────────────────────────────────────────────────
+Available Options: SIZE ✓ | SAUCE ✓ | TOPPINGS ✓ | BASE ✗
+
+Rationale:
+  • Multiple size options: Small, Medium, Large, Extra Large
+  • Various sauce coatings: Cheese, BBQ, Peri Peri, etc.
+  • Toppings: Bacon, Jalapeños, Onions, etc.
+  • No "base" needed - fries are the base
+
+Example Customization:
+  French Fries Large + Peri Peri Sauce + Cheese + Jalapeños
+
+───────────────────────────────────────────────────────────────────────────────
+DESSERTS
+───────────────────────────────────────────────────────────────────────────────
+Available Options: TOPPINGS ✓ ONLY | BASE ✗ | SAUCE ✗ | SIZE ✗
+
+Rationale:
+  • Desserts are finished products (cakes, ice cream, pastries)
+  • No base/size/sauce customization needed
+  • Only optional toppings: Sprinkles, Chocolate, Nuts, Whipped Cream, etc.
+
+Example Customization:
+  Chocolate Cake + Extra Chocolate Sprinkles + Whipped Cream
+
+───────────────────────────────────────────────────────────────────────────────
+BEVERAGES
+───────────────────────────────────────────────────────────────────────────────
+Available Options: SIZE ✓ ONLY | BASE ✗ | SAUCE ✗ | TOPPINGS ✗
+
+Rationale:
+  • Beverages primarily vary by size: Small, Medium, Large
+  • No base/sauce/toppings needed
+  • Size affects price and portion
+
+Example Customization:
+  Cola Large
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. IMPLEMENTATION DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.1 BACKEND: views.py - Customize_Food() Function
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Location: foods/views.py → Customize_Food(request, id=0)
+
+Function Flow:
+  1. Get food item from database using ID
+  2. Determine food category
+  3. Set show_* boolean flags based on category
+  4. Only query DB for options that will be shown
+  5. Pass flags and options to template
+
+Code Structure:
+
+  def Customize_Food(request, id=0):
+      food = get_object_or_404(FoodItems, id=id)
+      
+      # Category-based conditional flags
+      if food.category == "PIZZA":
+          show_size = True
+          show_base = True
+          show_sauce = True
+          show_toppings = True
+      elif food.category == "BURGER":
+          show_size = False
+          show_base = True
+          show_sauce = True
+          show_toppings = True
+      elif food.category == "BIRIYANI":
+          show_size = False
+          show_base = False
+          show_sauce = False
+          show_toppings = True
+      # ... additional categories ...
+      
+      # Only query options that will be displayed
+      size_opt = SizeChart.objects.all() if show_size else []
+      base_opt = BaseType.objects.all() if show_base else []
+      sauce_opt = Sauce.objects.all() if show_sauce else []
+      toppings_opt = Toppings.objects.all() if show_toppings else []
+      
+      context = {
+          'food': food,
+          'show_size': show_size,
+          'show_base': show_base,
+          'show_sauce': show_sauce,
+          'show_toppings': show_toppings,
+          'food_category': food.category,
+          'size_opt': size_opt,
+          'base_opt': base_opt,
+          'sauce_opt': sauce_opt,
+          'toppings_opt': toppings_opt,
+      }
+      return render(request, 'foods/customize.html', context)
+
+Context Variables Passed:
+  • show_size: Boolean - Display SIZE section
+  • show_base: Boolean - Display BASE section
+  • show_sauce: Boolean - Display SAUCE section
+  • show_toppings: Boolean - Display TOPPINGS section
+  • food_category: String - Food's category (for display info)
+  • size_opt, base_opt, sauce_opt, toppings_opt: Lists - Available options
+
+Key Design Decisions:
+  ✓ Database queries only for shown options (performance optimization)
+  ✓ Clear, readable if/elif blocks for each category
+  ✓ Centralized category logic makes updates easy
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.2 FRONTEND: customize.html - Template Conditionals
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Location: templates/foods/customize.html
+
+Template Structure:
+
+1. Category Info Box:
+   Shows which category is selected and what customizations are available
+   
+   {% if food_category == "PIZZA" %}
+     <p>✓ You can customize: Size, Base, Sauce, Toppings</p>
+   {% elif food_category == "BURGER" %}
+     <p>✓ You can customize: Base, Sauce, Toppings (No Size option)</p>
+   {% endif %}
+
+2. Conditional Option Groups:
+   Each customization section is wrapped with {% if show_* %} condition
+   
+   SIZE SECTION:
+   {% if show_size %}
+     <div class="option-group">
+       <h5>📏 Select Size</h5>
+       <!-- Radio buttons for sizes -->
+     </div>
+   {% endif %}
+   
+   BASE SECTION:
+   {% if show_base %}
+     <div class="option-group">
+       <h5>🥄 Select Base</h5>
+       <!-- Radio buttons for bases -->
+     </div>
+   {% endif %}
+   
+   SAUCE SECTION:
+   {% if show_sauce %}
+     <div class="option-group">
+       <h5>🍅 Select Sauce</h5>
+       <!-- Radio buttons for sauces -->
+     </div>
+   {% endif %}
+   
+   TOPPINGS SECTION:
+   {% if show_toppings %}
+     <div class="option-group">
+       <h5>🧅 Select Toppings (Multiple)</h5>
+       <!-- Checkboxes for toppings -->
+     </div>
+   {% endif %}
+
+Key Features:
+  ✓ Dynamic rendering based on view context
+  ✓ User-friendly category info display
+  ✓ Responsive layout adjusts to shown sections
+  ✓ Consistent styling across all options
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3.3 DATABASE MODELS (No Changes Required)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FoodItems Model Already Includes:
+  • category field: Stores category as string choice
+    Example: category = "PIZZA", "BURGER", "BIRIYANI", etc.
+
+No database migrations needed - category field already exists.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. USER EXPERIENCE FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step-by-Step User Journey:
+
+1. User browses food items list (home.html or allfoods.html)
+
+2. User clicks "Customize" button on a food item
+   URL: /customize/<food_id>/
+
+3. Backend (Customize_Food view):
+   ✓ Retrieves food item
+   ✓ Checks food.category
+   ✓ Sets show_* flags based on category rules
+   ✓ Queries only relevant options
+   ✓ Passes to template
+
+4. Frontend (customize.html) renders:
+   ✓ Shows category info: "📍 Category: Pizza"
+   ✓ Shows relevant options based on category
+   ✓ Hides irrelevant options
+   ✓ User sees clean, organized form
+
+5. User makes selections:
+   ✓ For Pizza: Can select size, base, sauce, toppings
+   ✓ For Burger: Can select base, sauce, toppings (NO size section visible)
+   ✓ For Biryani: Can select toppings ONLY
+   ✓ Etc.
+
+6. User clicks "Add to Cart"
+   Form submission to: /customize/save/<food_id>/
+
+7. Backend (save_customization view):
+   ✓ Receives POST data with selections
+   ✓ Creates CustomizedCart entry with selections
+   ✓ Calculates total price
+   ✓ Redirects to cart view
+
+8. User sees customized item in cart with breakdown:
+   - Base Price: ₹300
+   - Size: +₹50
+   - Sauce: +₹10
+   - Toppings: +₹30
+   - Total: ₹390
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. CODE REFERENCES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+FILES INVOLVED IN CATEGORY-BASED CUSTOMIZATION:
+
+1. foods/views.py
+   Function: Customize_Food(request, id=0)
+   Purpose: Determine category, set flags, query options, render template
+   Key Code: if/elif blocks for category checking
+
+2. templates/foods/customize.html
+   Template: {% if show_size %}, {% if show_base %}, etc.
+   Purpose: Conditionally render customization option groups
+   Key Code: Django template conditionals wrapping each section
+
+3. foods/models.py (No changes)
+   FoodItems: category field already exists
+   CustomizedCart: Stores selected customizations
+   No modifications required
+
+4. foods/forms.py (No changes)
+   CustomizationForm: Handles form rendering
+   No modifications required
+
+5. foods/urls.py (No changes)
+   URL routing for customize/ endpoint
+   No modifications required
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. TESTING SCENARIOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Test Case 1: PIZZA Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="PIZZA"                                           │
+│ Expected Output: All 4 sections visible (Size, Base, Sauce, Toppings)       │
+│ Steps:                                                                       │
+│   1. Click customize on any Pizza item                                       │
+│   2. Verify category info shows: "Size, Base, Sauce, Toppings"              │
+│   3. Verify all 4 option groups are rendered                                │
+│   4. Select: Large Size + Stuffed Crust + BBQ Sauce + Pepperoni + Onions    │
+│   5. Click "Add to Cart"                                                     │
+│   6. Verify customized item in cart with price breakdown                    │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Case 2: BURGER Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="BURGER"                                          │
+│ Expected Output: 3 sections visible (Base, Sauce, Toppings) | Size HIDDEN   │
+│ Steps:                                                                       │
+│   1. Click customize on any Burger item                                      │
+│   2. Verify category info shows: "Base, Sauce, Toppings (No Size option)"   │
+│   3. Verify SIZE section is NOT visible                                      │
+│   4. Verify Base, Sauce, Toppings sections ARE visible                      │
+│   5. Select: Toasted Bun + Mayo + Lettuce + Tomato                          │
+│   6. Click "Add to Cart"                                                     │
+│   7. Verify customized item in cart (no size charge)                        │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Case 3: BIRYANI Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="BIRIYANI"                                        │
+│ Expected Output: Only TOPPINGS section visible                              │
+│ Steps:                                                                       │
+│   1. Click customize on any Biryani item                                     │
+│   2. Verify category info shows: "Toppings only"                            │
+│   3. Verify Size, Base, Sauce sections are NOT visible                      │
+│   4. Verify TOPPINGS section IS visible                                     │
+│   5. Select: Boiled Eggs + Raita                                            │
+│   6. Click "Add to Cart"                                                     │
+│   7. Verify customized item in cart (only topping charges)                  │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Case 4: FRENCH FRIES Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="FRENCH FRIES"                                    │
+│ Expected Output: 3 sections visible (Size, Sauce, Toppings) | Base HIDDEN   │
+│ Steps:                                                                       │
+│   1. Click customize on French Fries item                                    │
+│   2. Verify category info shows: "Size, Sauce, Toppings"                    │
+│   3. Verify BASE section is NOT visible                                      │
+│   4. Verify Size, Sauce, Toppings sections ARE visible                      │
+│   5. Select: Large + Peri Peri Sauce + Cheese                               │
+│   6. Click "Add to Cart"                                                     │
+│   7. Verify customized item in cart (no base charge)                        │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Case 5: DESSERTS Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="DESSERTS"                                        │
+│ Expected Output: Only TOPPINGS section visible                              │
+│ Steps:                                                                       │
+│   1. Click customize on any Dessert item                                     │
+│   2. Verify TOPPINGS section is visible only                                │
+│   3. Select: Chocolate Sprinkles + Whipped Cream                            │
+│   4. Click "Add to Cart"                                                     │
+│   5. Verify customized item in cart                                         │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Test Case 6: BEVERAGES Category
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Input: Food with category="BEVERAGES"                                       │
+│ Expected Output: Only SIZE section visible                                  │
+│ Steps:                                                                       │
+│   1. Click customize on any Beverage item                                    │
+│   2. Verify SIZE section is visible only                                    │
+│   3. Select: Large                                                           │
+│   4. Click "Add to Cart"                                                     │
+│   5. Verify customized item in cart (only size charge)                      │
+│ Result: ✓ PASS / ✗ FAIL                                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+7. FUTURE ENHANCEMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Enhancement 1: Dynamic Category Configuration
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Purpose: Store category rules in database instead of hardcoding              │
+│                                                                              │
+│ Implementation:                                                              │
+│   • Create CategoryCustomization model:                                      │
+│     - category (ForeignKey to FoodCategory)                                  │
+│     - allow_size (Boolean)                                                   │
+│     - allow_base (Boolean)                                                   │
+│     - allow_sauce (Boolean)                                                  │
+│     - allow_toppings (Boolean)                                               │
+│                                                                              │
+│   • Modify Customize_Food view to query this model:                         │
+│     category_config = CategoryCustomization.objects.get(                    │
+│         category=food.category                                               │
+│     )                                                                        │
+│     show_size = category_config.allow_size                                  │
+│     # ... etc                                                                │
+│                                                                              │
+│   Benefits: Admins can change rules via Django admin without code changes   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Enhancement 2: Per-Food Item Customization Rules
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Purpose: Override default category rules for specific food items             │
+│                                                                              │
+│ Implementation:                                                              │
+│   • Add optional customization flags to FoodItems model:                    │
+│     - override_allow_size                                                    │
+│     - override_allow_base                                                    │
+│     - override_allow_sauce                                                   │
+│     - override_allow_toppings                                                │
+│                                                                              │
+│   Example: Disable size option for specific large pizza                     │
+│                                                                              │
+│   Benefits: Fine-grained control over individual items                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Enhancement 3: Analytics & Insights
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Purpose: Track which customizations users select most                        │
+│                                                                              │
+│ Metrics to Track:                                                            │
+│   • Most selected sizes per category                                         │
+│   • Most popular sauces                                                      │
+│   • Most added toppings combinations                                         │
+│                                                                              │
+│ Benefits: Improve menu recommendations, adjust pricing                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Enhancement 4: Customization Presets
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Purpose: Allow users to save and reuse customization preferences             │
+│                                                                              │
+│ Implementation:                                                              │
+│   • Create UserCustomizationPreset model storing saved combinations          │
+│   • Add "Save as Favorite" button on customize.html                         │
+│   • Show saved presets dropdown on customize page                           │
+│                                                                              │
+│ Benefits: Better user experience for repeat orders                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Enhancement 5: Conditional Pricing Based on Customizations
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Purpose: Show live price updates as user selects options                     │
+│                                                                              │
+│ Implementation:                                                              │
+│   • Add JavaScript to calculate price in real-time                          │
+│   • Update displayed price as selections change                             │
+│   • Show cost breakdown dynamically                                         │
+│                                                                              │
+│ Benefits: Better transparency, reduced checkout surprises                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+APPENDIX: IMPLEMENTATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Backend Implementation:
+  [✓] Customize_Food view updated with category-based logic
+  [✓] show_size, show_base, show_sauce, show_toppings flags set per category
+  [✓] Conditional database queries for options
+  [✓] Context variables passed to template
+
+✅ Frontend Implementation:
+  [✓] customize.html updated with {% if show_* %} conditionals
+  [✓] Category info box displays customization options
+  [✓] Each section wrapped in conditional block
+  [✓] Consistent styling maintained
+
+✅ Testing:
+  [ ] Test Pizza category (all options visible)
+  [ ] Test Burger category (no size)
+  [ ] Test Biryani category (toppings only)
+  [ ] Test French Fries category (no base)
+  [ ] Test Desserts category (toppings only)
+  [ ] Test Beverages category (size only)
+  [ ] Test form submission for each category
+  [ ] Test price calculation with different selections
+
+✅ Documentation:
+  [✓] Category mapping table documented
+  [✓] Implementation details explained
+  [✓] User experience flow documented
+  [✓] Test scenarios provided
+  [✓] Future enhancements suggested
+
+✅ Deployment:
+  [ ] Code review completed
+  [ ] All tests passing
+  [ ] No database migrations needed
+  [ ] Deploy to staging environment
+  [ ] User acceptance testing completed
+  [ ] Deploy to production
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+END OF DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Document Version: 1.0
+Last Updated: 2024
+Author: Development Team
+
+For questions or updates, refer to:
+  • foods/views.py - Backend logic
+  • templates/foods/customize.html - Frontend template
+  • SETUP_GUIDE.txt - Overall system setup

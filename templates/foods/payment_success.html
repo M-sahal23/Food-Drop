@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+  /* Swiggy-like minimal professional success page */
+    :root{--maxw:760px;--accent:#fc8019;--muted:#687076}
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;background:#fffefc;color:#0b1220}
+    .success-container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+    .success-card{width:100%;max-width:var(--maxw);background:#fff;border-radius:8px;padding:18px;border:1px solid #f2f2f2;box-shadow:0 6px 16px rgba(16,24,40,0.04)}
+    .header-row{display:flex;gap:12px;align-items:center}
+    .success-icon{width:56px;height:56px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:800}
+    .success-title{font-size:1rem;font-weight:800;margin:0;color:#0b1220}
+    .success-message{color:var(--muted);margin-top:6px;font-size:0.85rem}
+    .status-message{margin-top:12px;padding:10px;border-radius:8px;background:#fff7f0;border:1px solid rgba(252,128,25,0.06);color:#7a4a18;font-weight:600;display:flex;gap:8px;align-items:center}
+    .order-details-box{margin-top:12px;padding:10px;border-radius:8px;border:1px solid #f3f3f3;background:#fff}
+    .detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5}
+    .detail-row:last-child{border-bottom:none}
+    .detail-label{color:var(--muted);font-weight:700;font-size:0.78rem}
+    .detail-value{font-weight:700;color:#0b1220;font-size:0.9rem}
+    .order-id-display{display:inline-block;margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(252,128,25,0.06);color:var(--accent);font-weight:800;font-family:monospace;font-size:0.9rem}
+    .items-summary{margin-top:12px;border-top:1px solid #f5f5f5;padding-top:10px}
+    .item-line{display:flex;justify-content:space-between;padding:6px 0;color:var(--muted);font-size:0.9rem}
+    .item-price-text{color:#0b1220;font-weight:700;font-size:0.95rem}
+    .total-box{margin-top:12px;padding:10px;border-radius:8px;background:#fff;border:1px solid #f3f3f3;display:flex;justify-content:space-between;align-items:center}
+    .total-label{color:var(--muted);font-weight:700;font-size:0.9rem}
+    .total-amount{font-size:1.2rem;color:var(--accent);font-weight:800}
+    .action-buttons{display:flex;gap:8px;margin-top:12px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:0.9rem}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-secondary{background:#fff;border:1px solid #f0f0f0;color:#0b1220}
+    .thank-you-message{margin-top:10px;color:var(--muted);font-size:0.9rem}
+    @media(max-width:600px){.success-card{padding:14px}.header-row{gap:8px}.success-title{font-size:0.95rem}.total-amount{font-size:1.05rem}.action-buttons{flex-direction:column}}
+</style>
+
+<div class="success-container">
+    <div class="success-card">
+        <!-- SUCCESS ICON WITH CHECKMARK -->
+        <div class="success-icon">
+            <span class="checkmark">✓</span>
+        </div>
+
+        <!-- SUCCESS TITLE -->
+        <h1 class="success-title">Payment Successful!</h1>
+
+        <!-- SUCCESS MESSAGE -->
+        <p class="success-message">
+            Your payment has been processed successfully.<br>
+            Your order is now confirmed and being prepared.
+        </p>
+
+        <!-- STATUS MESSAGE -->
+        <div class="status-message">
+            <span class="status-icon">✓</span>
+            <span>Order confirmed and saved to your order history</span>
+        </div>
+
+        <!-- ORDER DETAILS BOX -->
+        <div class="order-details-box">
+            <div style="margin-bottom: 16px;">
+                <div style="font-size: 0.85rem; color: #718096; margin-bottom: 8px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Order ID</div>
+                <div class="order-id-display">{{ order.order_id }}</div>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">📦 Customer Name:</span>
+                <span class="detail-value">{{ order.customer_name }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">📅 Order Date:</span>
+                <span class="detail-value">{{ order.created_at|date:"d-M-Y, h:i A" }}</span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">📍 Status:</span>
+                <span class="detail-value" style="color: #4caf50;">✓ Processing</span>
+            </div>
+        </div>
+
+        <!-- ITEMS SUMMARY -->
+        <div class="items-summary">
+            <div class="summary-title">📦 Order Items</div>
+            {% for item in order_items %}
+                <div class="item-line">
+                    <span class="item-info-text">{{ item.food.name }} <strong>×{{ item.quantity }}</strong></span>
+                    <span class="item-price-text">₹{{ item.price|floatformat:2 }}</span>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- TOTAL AMOUNT -->
+        <div class="total-box">
+            <div class="total-label">💰 Total Amount Paid</div>
+            <div class="total-amount">₹{{ order.total_price|floatformat:2 }}</div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="action-buttons">
+            <a href="{% url 'order_tracking' order.order_id %}" class="btn btn-primary">
+                📍 Track Your Order
+            </a>
+            <a href="{% url 'order_history' %}" class="btn btn-secondary">
+                📋 View Order History
+            </a>
+            <a href="{% url 'allfoods' %}" class="btn btn-secondary">
+                🛒 Continue Shopping
+            </a>
+        </div>
+
+        <!-- THANK YOU MESSAGE -->
+        <div class="thank-you-message">
+            <p>✨ Thank you for your order! We'll notify you when it's on the way.</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

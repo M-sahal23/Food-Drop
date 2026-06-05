@@ -1,0 +1,290 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+
+      <!-- Col 1: Brand -->
+      <div class="footer-brand">
+        <h2>🍕 FoodApp</h2>
+        <p>Fresh food, delivered fast to your door. Order your favourite meals anytime.</p>
+        <div class="social-links">
+          <a href="#" aria-label="Facebook">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 22.43.36a9 9 0 0 1-2.88 1.1A4.52 4.52 0 0 0 16.11 0c-2.5 0-4.52 2-4.52 4.5 0 .35.04.7.11 1.03C7.69 5.37 4.07 3.58 1.64.9a4.49 4.49 0 0 0-.61 2.27c0 1.56.8 2.94 2 3.75A4.49 4.49 0 0 1 .96 6v.06c0 2.18 1.55 4 3.6 4.42a4.52 4.52 0 0 1-2.04.08c.57 1.8 2.24 3.1 4.2 3.14A9.05 9.05 0 0 1 0 15.54 12.77 12.77 0 0 0 6.92 17.5c8.3 0 12.84-6.88 12.84-12.85l-.01-.58A9.16 9.16 0 0 0 22 2l1 1z"/></svg>
+          </a>
+          <a href="#" aria-label="YouTube">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29.94 29.94 0 0 0 1 12a29.94 29.94 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.96A29.94 29.94 0 0 0 23 12a29.94 29.94 0 0 0-.46-5.58zM9.75 15.02V8.98L15.5 12l-5.75 3.02z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Col 2: Quick Links -->
+      <div>
+        <h6 class="footer-heading">Quick Links</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'allfoods' %}">All Foods</a></li>
+          <li><a href="{% url 'search' %}">Search</a></li>
+          <li><a href="{% url 'cart' %}">Cart</a></li>
+          <li><a href="{% url 'addnewfood' %}">Add Food</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Categories -->
+      <div>
+        <h6 class="footer-heading">Categories</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'search' %}?q=Pizza">🍕 Pizza</a></li>
+          <li><a href="{% url 'search' %}?q=Burger">🍔 Burger</a></li>
+          <li><a href="{% url 'search' %}?q=Biryani">🍛 Biryani</a></li>
+          <li><a href="{% url 'search' %}?q=Desserts">🍰 Desserts</a></li>
+          <li><a href="{% url 'search' %}?q=Beverages">🥤 Beverages</a></li>
+          <li><a href="{% url 'search' %}?q=French Fries">🍟 French Fries</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Contact + Payment -->
+      <div>
+        <h6 class="footer-heading">Contact Us</h6>
+        <ul class="footer-links">
+          <li><a href="#">📍 Kerala, India</a></li>
+          <li><a href="tel:+919876543210">📞 +91 98765 43210</a></li>
+          <li><a href="mailto:hello@foodapp.com">✉️ hello@foodapp.com</a></li>
+          <li><a href="#">🕐 Mon–Sun: 9am – 11pm</a></li>
+        </ul>
+
+        <h6 class="footer-heading mt-4">We Accept</h6>
+        <div class="payment-badges">
+          <span>UPI</span>
+          <span>Visa</span>
+          <span>Mastercard</span>
+          <span>COD</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <p>© 2025 FoodApp. All rights reserved. Made with ❤️ in Kerala</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Use</a>
+        <a href="#">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: #1a1a2e;
+    color: #b0b0c0;
+    margin-top: 60px;
+  }
+
+  .site-footer .container {
+    padding-top: 52px;
+    padding-bottom: 40px;
+  }
+
+  /* Responsive 4-column grid */
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+    gap: 40px;
+  }
+
+ /* Tablet: 2 columns */
+@media (max-width: 768px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}
+
+/* Mobile: 2 compact columns (NOT 1 column) */
+@media (max-width: 480px) {
+
+  .site-footer .container {
+    padding-top: 32px;      /* less top padding */
+    padding-bottom: 24px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;   /* 2 cols, not 1 */
+    gap: 20px;
+  }
+
+  /* Brand takes full width on its own row */
+  .footer-brand {
+    grid-column: 1 / -1;   /* spans both columns */
+  }
+
+  /* Shorter brand text on mobile */
+  .footer-brand p {
+    display: none;           /* hide tagline to save space */
+  }
+
+  /* Smaller social icons */
+  .social-links a {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* Tighter link spacing */
+  .footer-links li {
+    margin-bottom: 7px;
+  }
+  .footer-links a {
+    font-size: 0.82rem;
+  }
+
+  /* Smaller headings */
+  .footer-heading {
+    font-size: 0.72rem;
+    margin-bottom: 10px;
+  }
+
+  /* Smaller payment badges */
+  .payment-badges span {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+  }
+
+  /* Bottom bar stacks vertically */
+  .footer-bottom .container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .footer-bottom p,
+  .footer-bottom-links a {
+    font-size: 0.75rem;
+  }
+  .footer-bottom-links {
+    gap: 14px;
+  }
+
+  /* Remove hover indent on mobile (no hover on touch) */
+  .footer-links a:hover {
+    padding-left: 0;
+  }
+}
+
+  /* Brand column */
+  .footer-brand h2 {
+    color: #fff !important;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .footer-brand p {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: #888;
+    margin-bottom: 18px;
+  }
+
+  /* Social icons */
+  .social-links {
+    display: flex;
+    gap: 10px;
+  }
+  .social-links a {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+  }
+  .social-links a:hover {
+    background: #e63946;
+    color: #fff;
+    border-color: #e63946;
+  }
+
+  /* Column headings */
+  .footer-heading {
+    color: #fff !important;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+  }
+
+  /* Links */
+  .footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .footer-links li {
+    margin-bottom: 10px;
+  }
+  .footer-links a {
+    color: #888;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: color 0.2s, padding-left 0.2s;
+    display: inline-block;
+  }
+  .footer-links a:hover {
+    color: #e63946;
+    padding-left: 4px;
+  }
+
+  /* Payment badges */
+  .payment-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .payment-badges span {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #aaa;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    letter-spacing: 0.4px;
+  }
+
+  /* Bottom bar */
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 16px 0;
+  }
+  .footer-bottom p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #555;
+  }
+  .footer-bottom-links {
+    display: flex;
+    gap: 20px;
+  }
+  .footer-bottom-links a {
+    color: #555;
+    text-decoration: none;
+    font-size: 0.8rem;
+    transition: color 0.2s;
+  }
+  .footer-bottom-links a:hover {
+    color: #e63946;
+  }
+</style>
