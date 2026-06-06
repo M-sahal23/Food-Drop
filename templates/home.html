@@ -12,48 +12,83 @@
     body {
         background-color: var(--bg-secondary);
     }
-
+/*
     .hero-section {
         background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 100%);
         color: black;
         padding: 100px 50px;
         text-align: center;
         margin-bottom: 40px;
+        
     }
-
+*/
     /* Theme-specific hero backgrounds */
     [data-theme="light"] .hero-section {
        /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
-        background-image: url("{% static 'images/hero-bg-light.jpg' %}");
+        background-image: url("{% static 'images/hero-bg-light.webp' %}");
         background-repeat: no-repeat;
         background-size: 100% 100%;
         background-position: center;
         background-attachment: fixed;
-        filter: brightness(0.9);
+        
     }
 
     [data-theme="dark"] .hero-section {
        /* background: linear-gradient(135deg, #1c1c1c 0%, #2d2d2d 100%); */
-        background-image: url("{% static 'images/hero-bg-dark.jpg' %}");
+        background-image: url("{% static 'images/hero-bg-dark.webp' %}");
         background-repeat: no-repeat;
         background-size: 100% 100%;
         background-position: center;
         background-attachment: fixed;
     }
+[data-theme="light"] .hero-section::before {
+    background: rgba(0, 0, 0, 0.45);
+}
 
+[data-theme="dark"] .hero-section::before {
+    background: rgba(0, 0, 0, 0.65);
+}
     /* Hero text styles  */
-    .hero-section h1 {
-        
-        font-size: 2.5rem;
-        color: #000 ;
-        font-weight: 700;
-        margin-bottom: 10px;
-    }
+   /* Add a dark overlay using a pseudo-element */
+.hero-section {
+    position: relative;
+    color: #fff !important;
+    padding: 100px 50px;
+    text-align: center;
+    margin-bottom: 40px;
+}
 
-    .hero-section p {
-        font-size: 1.1rem;
-        margin-bottom: 20px;
-    }
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* 50% dark overlay */
+    z-index: 0;
+}
+
+/* Make sure hero content sits ABOVE the overlay */
+.hero-section > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Update text colors to white so they pop on dark overlay */
+.hero-section h1 {
+    font-size: 2.5rem;
+    color: #ffffff !important;  /* Change from #000 to white */
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Optional extra depth */
+}
+
+.hero-section p {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #f0f0f0; /* Light color for subtitle */
+}
 
     .hero-cta {
         display: inline-block;
