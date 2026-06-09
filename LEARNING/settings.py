@@ -220,5 +220,12 @@ STORAGES = {
     "default": {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
+
+
+print("Cloud Name:", os.getenv("CLOUDINARY_CLOUD_NAME"))
+print("Cloudinary Storage Loaded")
 
