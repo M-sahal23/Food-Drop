@@ -44,6 +44,7 @@ def Food_Details(request, id=0):
         'is_wishlisted': is_wishlisted,
     })
 
+@login_required(login_url='login')
 def add_review(request, food_id):
     food = get_object_or_404(FoodItems, id=food_id)
 
@@ -101,6 +102,7 @@ def AddNewFood(request):
 
 #     return redirect('cart',id)
 
+@login_required(login_url='login')
 def AddToCart(request, id):
     food = get_object_or_404(FoodItems, id=id)
     
@@ -202,7 +204,7 @@ def update_customized_quantity(request, id):
 
 
 
-
+@login_required(login_url='login')
 def Customize_Food(request, id=0):
     """Display customization page with options based on food category"""
     food = get_object_or_404(FoodItems, id=id)
@@ -308,7 +310,7 @@ def save_customization(request, id):
     
     return redirect('customize', id=id) 
 
-
+@login_required(login_url='login')
 def buy_now(request):
     """Process order from cart items"""
     if request.method == 'POST':

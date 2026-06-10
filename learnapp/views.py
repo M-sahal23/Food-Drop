@@ -57,7 +57,7 @@ def user_logout(request):
     logout(request)
     return redirect('login')
 
-@login_required(login_url="login")
+
 def home(request):
     allfood = FoodItems.objects.all()
     top_rated_foods = FoodItems.objects.filter(rating__gte=4).order_by('-rating')[:6]
